@@ -475,15 +475,23 @@
                 
                 // Display lyrics from column D with improved formatting
                 if (song.lyrics && song.lyrics.length > 0) {
-                    // Replace common text markers with actual line breaks
+                    // Preserve original line breaks and format text properly
                     let formattedLyrics = song.lyrics
-                        .replace(/\\n/g, '\n')  // Replace \n with actual newlines
-                        .replace(/\|\|/g, '\n')  // Replace || with newlines
-                        .replace(/\|/g, '\n')    // Replace | with newlines
-                        .replace(/\*\*/g, '\n')  // Replace ** with newlines
+                        .replace(/\\r\\n/g, '\n')    // Replace \r\n with newlines
+                        .replace(/\\n/g, '\n')       // Replace \n with actual newlines
+                        .replace(/\r\n/g, '\n')      // Replace actual \r\n with newlines
+                        .replace(/\r/g, '\n')        // Replace \r with newlines
+                        .replace(/\|\|/g, '\n')      // Replace || with newlines
+                        .replace(/\|/g, ' ')         // Replace single | with space (not newline)
+                        .replace(/\*\*/g, '\n')      // Replace ** with newlines
+                        .replace(/\n\s*\n/g, '\n\n') // Clean up multiple newlines
                         .trim();
                     
+                    // Ensure proper line breaks are displayed
+                    this.songLyrics.style.whiteSpace = 'pre-wrap';
                     this.songLyrics.textContent = formattedLyrics;
+                    
+                    console.log('Formatted lyrics:', formattedLyrics);
                 } else {
                     this.songLyrics.textContent = 'متن این آهنگ در دسترس نیست';
                 }
