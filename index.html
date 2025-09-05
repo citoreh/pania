@@ -473,25 +473,37 @@
                 this.songTitle.textContent = song.title || 'بدون عنوان';
                 this.songPoet.textContent = song.poet || 'شاعر نامشخص';
                 
-                // Display lyrics from column D with improved formatting
+                // Display lyrics from column D with comprehensive formatting
                 if (song.lyrics && song.lyrics.length > 0) {
-                    // Preserve original line breaks and format text properly
+                    console.log('Original lyrics:', JSON.stringify(song.lyrics));
+                    
+                    // Handle various possible line break formats from Google Sheets
                     let formattedLyrics = song.lyrics
-                        .replace(/\\r\\n/g, '\n')    // Replace \r\n with newlines
-                        .replace(/\\n/g, '\n')       // Replace \n with actual newlines
-                        .replace(/\r\n/g, '\n')      // Replace actual \r\n with newlines
-                        .replace(/\r/g, '\n')        // Replace \r with newlines
-                        .replace(/\|\|/g, '\n')      // Replace || with newlines
-                        .replace(/\|/g, ' ')         // Replace single | with space (not newline)
-                        .replace(/\*\*/g, '\n')      // Replace ** with newlines
-                        .replace(/\n\s*\n/g, '\n\n') // Clean up multiple newlines
+                        // Handle escaped newlines first
+                        .replace(/\\r\\n/g, '\n')
+                        .replace(/\\n/g, '\n')
+                        .replace(/\\r/g, '\n')
+                        // Handle actual newlines
+                        .replace(/\r\n/g, '\n')
+                        .replace(/\r/g, '\n')
+                        // Handle manual separators
+                        .replace(/\|\|/g, '\n')
+                        .replace(/\*\*/g, '\n')
+                        .replace(/\s*\|\s*/g, '\n')  // Pipe with optional spaces
+                        // Handle HTML line breaks if any
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        // Clean up excessive whitespace but preserve intentional line breaks
+                        .replace(/[ \t]+/g, ' ')  // Multiple spaces/tabs to single space
+                        .replace(/\n\s*\n\s*\n/g, '\n\n')  // Max 2 consecutive newlines
                         .trim();
+                    
+                    console.log('Formatted lyrics:', JSON.stringify(formattedLyrics));
+                    console.log('Number of lines:', formattedLyrics.split('\n').length);
                     
                     // Ensure proper line breaks are displayed
                     this.songLyrics.style.whiteSpace = 'pre-wrap';
+                    this.songLyrics.style.wordWrap = 'break-word';
                     this.songLyrics.textContent = formattedLyrics;
-                    
-                    console.log('Formatted lyrics:', formattedLyrics);
                 } else {
                     this.songLyrics.textContent = 'متن این آهنگ در دسترس نیست';
                 }
