@@ -235,6 +235,18 @@
             border-radius: 10px;
             margin: 20px 0;
         }
+
+        .debug-info {
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            max-height: 100px;
+            overflow-y: auto;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -257,9 +269,11 @@
                 <button class="control-btn" id="prevBtn">قبلی</button>
                 <button class="control-btn" id="playPauseBtn">پخش</button>
                 <button class="control-btn" id="nextBtn">بعدی</button>
+                <button class="control-btn" id="debugBtn">Debug</button>
             </div>
             
             <div class="song-lyrics" id="songLyrics">متن آهنگ در اینجا نمایش داده می‌شود</div>
+            <div id="debugInfo" class="debug-info"></div>
         </div>
         
         <div id="error" class="error" style="display: none;"></div>
@@ -275,6 +289,7 @@
                 this.isPlaying = false;
                 this.shuffledPlaylist = [];
                 this.audioPlayer = document.getElementById('audioPlayer');
+                this.debugMode = false;
                 this.backgrounds = [
                     'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4)',
                     'linear-gradient(45deg, #ffeaa7, #dda0dd, #fd79a8, #74b9ff)',
@@ -295,11 +310,13 @@
                 this.playPauseBtn = document.getElementById('playPauseBtn');
                 this.prevBtn = document.getElementById('prevBtn');
                 this.nextBtn = document.getElementById('nextBtn');
+                this.debugBtn = document.getElementById('debugBtn');
                 this.progress = document.getElementById('progress');
                 this.songLyrics = document.getElementById('songLyrics');
                 this.musicPlayer = document.getElementById('musicPlayer');
                 this.loading = document.getElementById('loading');
                 this.error = document.getElementById('error');
+                this.debugInfo = document.getElementById('debugInfo');
                 this.backgroundContainer = document.querySelector('.background-container');
             }
             
@@ -307,6 +324,7 @@
                 this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
                 this.nextBtn.addEventListener('click', () => this.nextSong());
                 this.prevBtn.addEventListener('click', () => this.prevSong());
+                this.debugBtn.addEventListener('click', () => this.toggleDebug());
                 
                 this.audioPlayer.addEventListener('loadstart', () => this.onLoadStart());
                 this.audioPlayer.addEventListener('canplay', () => this.onCanPlay());
@@ -330,21 +348,41 @@
             }
             
             parseCsv(csvText) {
-                const lines = csvText.split('\n');
-                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                const lines = csvText.split('\n').filter(line => line.trim().length > 0);
                 
+                // Debug: Log the first few lines
+                console.log('First 3 lines of CSV:', lines.slice(0, 3));
+                
+                if (lines.length < 2) {
+                    throw new Error('CSV file appears to be empty or invalid');
+                }
+                
+                // Parse header row
+                const headers = this.parseCSVLine(lines[0]);
+                console.log('Headers found:', headers);
+                
+                // Parse data rows
                 for (let i = 1; i < lines.length; i++) {
                     const values = this.parseCSVLine(lines[i]);
-                    if (values.length >= headers.length) {
-                        const song = {};
-                        headers.forEach((header, index) => {
-                            song[header] = values[index] ? values[index].trim() : '';
-                        });
+                    
+                    if (values.length >= 4) { // Ensure we have at least 4 columns (A, B, C, D)
+                        const song = {
+                            title: (values[0] || '').trim(),      // Column A
+                            poet: (values[1] || '').trim(),       // Column B  
+                            url: (values[2] || '').trim(),        // Column C
+                            lyrics: (values[3] || '').trim()      // Column D - Force lyrics from column D
+                        };
                         
+                        // Only add songs that have a URL
                         if (song.url && song.url.length > 0) {
                             this.songs.push(song);
                         }
                     }
+                }
+                
+                console.log(`Loaded ${this.songs.length} songs`);
+                if (this.songs.length > 0) {
+                    console.log('Sample song:', this.songs[0]);
                 }
             }
             
@@ -352,20 +390,35 @@
                 const result = [];
                 let current = '';
                 let inQuotes = false;
+                let i = 0;
                 
-                for (let i = 0; i < line.length; i++) {
+                while (i < line.length) {
                     const char = line[i];
                     
                     if (char === '"') {
-                        inQuotes = !inQuotes;
+                        if (inQuotes && line[i + 1] === '"') {
+                            // Escaped quote
+                            current += '"';
+                            i += 2;
+                        } else {
+                            // Toggle quote state
+                            inQuotes = !inQuotes;
+                            i++;
+                        }
                     } else if (char === ',' && !inQuotes) {
+                        // Field separator
                         result.push(current);
                         current = '';
+                        i++;
                     } else {
                         current += char;
+                        i++;
                     }
                 }
+                
+                // Add the last field
                 result.push(current);
+                
                 return result;
             }
             
@@ -405,12 +458,6 @@
             showPlayer() {
                 this.loading.style.display = 'none';
                 this.musicPlayer.style.display = 'block';
-                
-                // Show confirmation that column D is being used for lyrics
-                if (this.songs.length > 0) {
-                    console.log('Using column D for lyrics');
-                    console.log('Sample lyrics:', this.songs[0].lyrics);
-                }
             }
             
             showError(message) {
@@ -425,9 +472,45 @@
                 const song = this.shuffledPlaylist[this.currentIndex];
                 this.songTitle.textContent = song.title || 'بدون عنوان';
                 this.songPoet.textContent = song.poet || 'شاعر نامشخص';
-                this.songLyrics.textContent = song.lyrics || 'متن این آهنگ در دسترس نیست';
+                
+                // Display lyrics from column D with improved formatting
+                if (song.lyrics && song.lyrics.length > 0) {
+                    // Replace common text markers with actual line breaks
+                    let formattedLyrics = song.lyrics
+                        .replace(/\\n/g, '\n')  // Replace \n with actual newlines
+                        .replace(/\|\|/g, '\n')  // Replace || with newlines
+                        .replace(/\|/g, '\n')    // Replace | with newlines
+                        .replace(/\*\*/g, '\n')  // Replace ** with newlines
+                        .trim();
+                    
+                    this.songLyrics.textContent = formattedLyrics;
+                } else {
+                    this.songLyrics.textContent = 'متن این آهنگ در دسترس نیست';
+                }
+                
                 this.audioPlayer.src = song.url;
                 this.changeBackground();
+                this.updateDebugInfo();
+            }
+            
+            updateDebugInfo() {
+                if (this.debugMode) {
+                    const song = this.shuffledPlaylist[this.currentIndex];
+                    this.debugInfo.innerHTML = `
+                        <strong>Debug Info:</strong><br>
+                        Title: ${song.title}<br>
+                        Poet: ${song.poet}<br>
+                        URL: ${song.url}<br>
+                        Lyrics length: ${song.lyrics ? song.lyrics.length : 0}<br>
+                        Lyrics preview: ${song.lyrics ? song.lyrics.substring(0, 100) + '...' : 'None'}
+                    `;
+                }
+            }
+            
+            toggleDebug() {
+                this.debugMode = !this.debugMode;
+                this.debugInfo.style.display = this.debugMode ? 'block' : 'none';
+                this.updateDebugInfo();
             }
             
             changeBackground() {
