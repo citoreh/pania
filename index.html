@@ -458,10 +458,6 @@
                 }
             }
             
-            updateSongCounter() {
-                this.songCounter.textContent = `${this.currentIndex + 1} از ${this.shuffledPlaylist.length}`;
-            }
-            
             onAudioError(e) {
                 this.showError('خطا در پخش فایل صوتی');
                 this.nextSong(); // Skip to next song on error
