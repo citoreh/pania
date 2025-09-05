@@ -188,10 +188,40 @@
             transition: width 0.1s linear;
         }
         
-        .song-counter {
-            color: rgba(255, 255, 255, 0.8);
+        .song-lyrics {
+            color: rgba(255, 255, 255, 0.9);
             font-size: 1.1rem;
-            margin-top: 10px;
+            margin-top: 20px;
+            max-width: 500px;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.8;
+            text-align: center;
+            direction: rtl;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            white-space: pre-line;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        
+        .song-lyrics::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .song-lyrics::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .song-lyrics::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .song-lyrics::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
         
         audio {
@@ -229,7 +259,7 @@
                 <button class="control-btn" id="nextBtn">بعدی</button>
             </div>
             
-            <div class="song-counter" id="songCounter">1 از 0</div>
+            <div class="song-lyrics" id="songLyrics">متن آهنگ در اینجا نمایش داده می‌شود</div>
         </div>
         
         <div id="error" class="error" style="display: none;"></div>
@@ -266,7 +296,7 @@
                 this.prevBtn = document.getElementById('prevBtn');
                 this.nextBtn = document.getElementById('nextBtn');
                 this.progress = document.getElementById('progress');
-                this.songCounter = document.getElementById('songCounter');
+                this.songLyrics = document.getElementById('songLyrics');
                 this.musicPlayer = document.getElementById('musicPlayer');
                 this.loading = document.getElementById('loading');
                 this.error = document.getElementById('error');
@@ -375,7 +405,6 @@
             showPlayer() {
                 this.loading.style.display = 'none';
                 this.musicPlayer.style.display = 'block';
-                this.updateSongCounter();
             }
             
             showError(message) {
@@ -390,8 +419,8 @@
                 const song = this.shuffledPlaylist[this.currentIndex];
                 this.songTitle.textContent = song.title || 'بدون عنوان';
                 this.songPoet.textContent = song.poet || 'شاعر نامشخص';
+                this.songLyrics.textContent = song.lyrics || 'متن این آهنگ در دسترس نیست';
                 this.audioPlayer.src = song.url;
-                this.updateSongCounter();
                 this.changeBackground();
             }
             
