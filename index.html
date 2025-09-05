@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پخش کننده موسیقی فارسی</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            transition: all 2s ease-in-out;
+        }
+        
+        .animated-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #dda0dd);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+        }
+        
+        .animated-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: floatingCircles 12s ease-in-out infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        @keyframes floatingCircles {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            33% {
+                transform: translateY(-20px) rotate(120deg);
+            }
+            66% {
+                transform: translateY(10px) rotate(240deg);
+            }
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .music-info {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transform: translateY(0);
+            transition: all 0.5s ease;
+        }
+        
+        .music-info.playing {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+        }
+        
+        .song-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+        
+        .song-poet {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        @keyframes titleGlow {
+            from {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            to {
+                text-shadow: 2px 2px 20px rgba(255, 255, 255, 0.5);
+            }
+        }
+        
+        .controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        .loading {
+            font-size: 1.5rem;
+            color: white;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .progress-bar {
+            width: 300px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .song-counter {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        
+        audio {
+            display: none;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-container">
+        <div class="animated-bg"></div>
+    </div>
+    
+    <div class="container">
+        <div id="loading" class="loading">در حال بارگذاری فهرست موسیقی...</div>
+        
+        <div id="musicPlayer" class="music-info" style="display: none;">
+            <div class="song-title" id="songTitle">عنوان آهنگ</div>
+            <div class="song-poet" id="songPoet">شاعر</div>
+            
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" id="prevBtn">قبلی</button>
+                <button class="control-btn" id="playPauseBtn">پخش</button>
+                <button class="control-btn" id="nextBtn">بعدی</button>
+            </div>
+            
+            <div class="song-counter" id="songCounter">1 از 0</div>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+    
+    <audio id="audioPlayer" preload="auto"></audio>
+
+    <script>
+        class PersianMusicPlayer {
+            constructor() {
+                this.songs = [];
+                this.currentIndex = 0;
+                this.isPlaying = false;
+                this.shuffledPlaylist = [];
+                this.audioPlayer = document.getElementById('audioPlayer');
+                this.backgrounds = [
+                    'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4)',
+                    'linear-gradient(45deg, #ffeaa7, #dda0dd, #fd79a8, #74b9ff)',
+                    'linear-gradient(45deg, #55a3ff, #003d82, #00d2d3, #ff7675)',
+                    'linear-gradient(45deg, #a29bfe, #fd79a8, #fdcb6e, #6c5ce7)',
+                    'linear-gradient(45deg, #e17055, #74b9ff, #00b894, #ffeaa7)',
+                    'linear-gradient(45deg, #fd79a8, #55a3ff, #26de81, #ffc048)',
+                ];
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.loadSongs();
+            }
+            
+            initializeElements() {
+                this.songTitle = document.getElementById('songTitle');
+                this.songPoet = document.getElementById('songPoet');
+                this.playPauseBtn = document.getElementById('playPauseBtn');
+                this.prevBtn = document.getElementById('prevBtn');
+                this.nextBtn = document.getElementById('nextBtn');
+                this.progress = document.getElementById('progress');
+                this.songCounter = document.getElementById('songCounter');
+                this.musicPlayer = document.getElementById('musicPlayer');
+                this.loading = document.getElementById('loading');
+                this.error = document.getElementById('error');
+                this.backgroundContainer = document.querySelector('.background-container');
+            }
+            
+            bindEvents() {
+                this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+                this.nextBtn.addEventListener('click', () => this.nextSong());
+                this.prevBtn.addEventListener('click', () => this.prevSong());
+                
+                this.audioPlayer.addEventListener('loadstart', () => this.onLoadStart());
+                this.audioPlayer.addEventListener('canplay', () => this.onCanPlay());
+                this.audioPlayer.addEventListener('timeupdate', () => this.updateProgress());
+                this.audioPlayer.addEventListener('ended', () => this.nextSong());
+                this.audioPlayer.addEventListener('error', (e) => this.onAudioError(e));
+            }
+            
+            async loadSongs() {
+                try {
+                    const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QP9XuvvqLrbzaQ0rV9WfSVHYOBKQgJZUTzTQeSpzyUSQbSxIkJUlPFc67K8k2aIDuB5mcPrjHMU/pub?output=csv');
+                    const csvText = await response.text();
+                    
+                    this.parseCsv(csvText);
+                    this.createShuffledPlaylist();
+                    this.showPlayer();
+                    this.loadCurrentSong();
+                } catch (error) {
+                    this.showError('خطا در بارگذاری فهرست موسیقی: ' + error.message);
+                }
+            }
+            
+            parseCsv(csvText) {
+                const lines = csvText.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const values = this.parseCSVLine(lines[i]);
+                    if (values.length >= headers.length) {
+                        const song = {};
+                        headers.forEach((header, index) => {
+                            song[header] = values[index] ? values[index].trim() : '';
+                        });
+                        
+                        if (song.url && song.url.length > 0) {
+                            this.songs.push(song);
+                        }
+                    }
+                }
+            }
+            
+            parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current);
+                return result;
+            }
+            
+            createShuffledPlaylist() {
+                this.shuffledPlaylist = [...this.songs];
+                
+                // Fisher-Yates shuffle
+                for (let i = this.shuffledPlaylist.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.shuffledPlaylist[i], this.shuffledPlaylist[j]] = [this.shuffledPlaylist[j], this.shuffledPlaylist[i]];
+                }
+                
+                // Ensure no consecutive duplicates by title
+                this.avoidConsecutiveDuplicates();
+            }
+            
+            avoidConsecutiveDuplicates() {
+                for (let i = 1; i < this.shuffledPlaylist.length; i++) {
+                    if (this.shuffledPlaylist[i].title === this.shuffledPlaylist[i-1].title) {
+                        // Find next different song
+                        let swapIndex = -1;
+                        for (let j = i + 1; j < this.shuffledPlaylist.length; j++) {
+                            if (this.shuffledPlaylist[j].title !== this.shuffledPlaylist[i-1].title) {
+                                swapIndex = j;
+                                break;
+                            }
+                        }
+                        
+                        if (swapIndex !== -1) {
+                            [this.shuffledPlaylist[i], this.shuffledPlaylist[swapIndex]] = 
+                            [this.shuffledPlaylist[swapIndex], this.shuffledPlaylist[i]];
+                        }
+                    }
+                }
+            }
+            
+            showPlayer() {
+                this.loading.style.display = 'none';
+                this.musicPlayer.style.display = 'block';
+                this.updateSongCounter();
+            }
+            
+            showError(message) {
+                this.loading.style.display = 'none';
+                this.error.textContent = message;
+                this.error.style.display = 'block';
+            }
+            
+            loadCurrentSong() {
+                if (this.shuffledPlaylist.length === 0) return;
+                
+                const song = this.shuffledPlaylist[this.currentIndex];
+                this.songTitle.textContent = song.title || 'بدون عنوان';
+                this.songPoet.textContent = song.poet || 'شاعر نامشخص';
+                this.audioPlayer.src = song.url;
+                this.updateSongCounter();
+                this.changeBackground();
+            }
+            
+            changeBackground() {
+                const randomBg = this.backgrounds[Math.floor(Math.random() * this.backgrounds.length)];
+                const animatedBg = this.backgroundContainer.querySelector('.animated-bg');
+                animatedBg.style.background = randomBg;
+                animatedBg.style.backgroundSize = '400% 400%';
+            }
+            
+            togglePlayPause() {
+                if (this.isPlaying) {
+                    this.audioPlayer.pause();
+                    this.playPauseBtn.textContent = 'پخش';
+                    this.musicPlayer.classList.remove('playing');
+                    this.isPlaying = false;
+                } else {
+                    this.audioPlayer.play().catch(e => {
+                        this.showError('خطا در پخش: ' + e.message);
+                    });
+                }
+            }
+            
+            nextSong() {
+                this.currentIndex = (this.currentIndex + 1) % this.shuffledPlaylist.length;
+                this.loadCurrentSong();
+                if (this.isPlaying) {
+                    this.audioPlayer.play().catch(e => {
+                        this.showError('خطا در پخش: ' + e.message);
+                    });
+                }
+            }
+            
+            prevSong() {
+                this.currentIndex = this.currentIndex === 0 ? this.shuffledPlaylist.length - 1 : this.currentIndex - 1;
+                this.loadCurrentSong();
+                if (this.isPlaying) {
+                    this.audioPlayer.play().catch(e => {
+                        this.showError('خطا در پخش: ' + e.message);
+                    });
+                }
+            }
+            
+            onLoadStart() {
+                this.playPauseBtn.textContent = 'در حال بارگذاری...';
+                this.playPauseBtn.disabled = true;
+            }
+            
+            onCanPlay() {
+                this.playPauseBtn.textContent = this.isPlaying ? 'توقف' : 'پخش';
+                this.playPauseBtn.disabled = false;
+            }
+            
+            updateProgress() {
+                if (this.audioPlayer.duration) {
+                    const progressPercent = (this.audioPlayer.currentTime / this.audioPlayer.duration) * 100;
+                    this.progress.style.width = progressPercent + '%';
+                }
+                
+                if (!this.audioPlayer.paused && !this.isPlaying) {
+                    this.isPlaying = true;
+                    this.playPauseBtn.textContent = 'توقف';
+                    this.musicPlayer.classList.add('playing');
+                }
+            }
+            
+            updateSongCounter() {
+                this.songCounter.textContent = `${this.currentIndex + 1} از ${this.shuffledPlaylist.length}`;
+            }
+            
+            onAudioError(e) {
+                this.showError('خطا در پخش فایل صوتی');
+                this.nextSong(); // Skip to next song on error
+            }
+        }
+        
+        // Initialize the player when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new PersianMusicPlayer();
+        });
+    </script>
+</body>
+</html>
