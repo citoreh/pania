@@ -405,6 +405,29 @@
             showPlayer() {
                 this.loading.style.display = 'none';
                 this.musicPlayer.style.display = 'block';
+                
+                // Show debug info about columns found
+                if (this.songs.length > 0) {
+                    const availableColumns = Object.keys(this.songs[0]);
+                    console.log('Available columns in CSV:', availableColumns);
+                    
+                    // Create a temporary debug message
+                    const debugMsg = document.createElement('div');
+                    debugMsg.style.cssText = 'position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 1000; max-width: 300px;';
+                    debugMsg.innerHTML = `
+                        <strong>ستون‌های موجود در CSV:</strong><br>
+                        ${availableColumns.join(', ')}<br><br>
+                        <strong>ستون متن انتخاب شده:</strong> ${this.lyricsColumn || 'یافت نشد'}
+                    `;
+                    document.body.appendChild(debugMsg);
+                    
+                    // Remove debug message after 10 seconds
+                    setTimeout(() => {
+                        if (debugMsg.parentNode) {
+                            debugMsg.parentNode.removeChild(debugMsg);
+                        }
+                    }, 10000);
+                }
             }
             
             showError(message) {
