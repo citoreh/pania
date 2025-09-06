@@ -7,57 +7,146 @@
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        body {
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             font-family: 'Vazirmatn', sans-serif;
             color: white;
-            text-align: right;
+            text-align: center;
             direction: rtl;
-            background: linear-gradient(45deg, var(--color1, #ff6b6b), var(--color2, #4ecdc4));
-            background-size: 400% 400%;
-            animation: gradientShift 10s ease infinite;
             min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(45deg, var(--color1, #ff6b6b), var(--color2, #4ecdc4), var(--color3, #a8e6cf), var(--color4, #ffd93d));
+            background-size: 400% 400%;
+            animation: gradientFlow 8s ease infinite;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        @keyframes gradientShift {
+        @keyframes gradientFlow {
             0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+            25% { background-position: 100% 0%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
             100% { background-position: 0% 50%; }
         }
 
-        #lyrics-container {
+        /* Musical Elements */
+        .musical-note {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.6;
+            animation: float 4s infinite ease-in-out;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+            25% { transform: translateY(-20px) rotate(90deg); opacity: 0.8; }
+            50% { transform: translateY(-40px) rotate(180deg); opacity: 1; }
+            75% { transform: translateY(-20px) rotate(270deg); opacity: 0.8; }
+        }
+
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25' fill='%23ffffff'%3E%3C/path%3E%3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' opacity='.5' fill='%23ffffff'%3E%3C/path%3E%3Cpath d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z' fill='%23ffffff'%3E%3C/path%3E%3C/svg%3E") repeat-x;
+            animation: wave 3s ease-in-out infinite;
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: translateX(0px); }
+            50% { transform: translateX(-50px); }
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
             max-width: 800px;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 40px 20px;
+            text-align: center;
         }
 
         #title {
-            font-size: 2.5em;
+            font-size: clamp(2rem, 8vw, 4rem);
             font-weight: 700;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: titlePulse 3s ease-in-out infinite;
+            background: linear-gradient(45deg, #fff, #f0f0f0, #fff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+            50% { transform: scale(1.05); text-shadow: 0 0 30px rgba(255, 255, 255, 0.8); }
         }
 
         #poet {
-            font-size: 1.5em;
+            font-size: clamp(1.2rem, 4vw, 2rem);
             font-weight: 400;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             opacity: 0.9;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            animation: poetFade 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes poetFade {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
 
         #lyrics {
-            font-size: 1.2em;
+            font-size: clamp(1rem, 3vw, 1.4rem);
             line-height: 1.8;
             white-space: pre-wrap;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            animation: lyricsGlow 4s ease-in-out infinite;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes lyricsGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+            50% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.6); }
+        }
+
+        #lyrics::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #lyrics::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        #lyrics::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        #lyrics::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
 
         #audio {
@@ -65,18 +154,98 @@
         }
 
         #error {
-            color: #ff4444;
+            color: #ff6b6b;
             font-size: 1.2em;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+            animation: errorBlink 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes errorBlink {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* Particle System */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            animation: particleFloat 6s infinite linear;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px 10px;
+            }
+            
+            #lyrics {
+                max-height: 50vh;
+                padding: 15px;
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            animation: loadingPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Click hint */
+        .click-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            opacity: 0.7;
+            animation: clickHint 2s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        @keyframes clickHint {
+            0%, 100% { transform: translateX(-50%) translateY(0px); opacity: 0.7; }
+            50% { transform: translateX(-50%) translateY(-10px); opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <div id="lyrics-container">
-        <h1 id="title">در حال بارگذاری...</h1>
+    <div class="wave"></div>
+    
+    <div class="content">
+        <h1 id="title" class="loading">در حال بارگذاری...</h1>
         <h2 id="poet"></h2>
-        <div id="lyrics">در حال بارگذاری اشعار...</div>
+        <div id="lyrics" class="loading">در حال بارگذاری اشعار...</div>
         <div id="error"></div>
     </div>
+    
+    <div id="click-hint" class="click-hint" style="display: none;">برای شروع پخش، صفحه را لمس کنید</div>
+    
     <audio id="audio" preload="auto"></audio>
 
     <script>
@@ -86,17 +255,73 @@
         const poetEl = document.getElementById('poet');
         const lyricsEl = document.getElementById('lyrics');
         const errorEl = document.getElementById('error');
+        const clickHintEl = document.getElementById('click-hint');
 
         let playlist = [];
         let currentIndex = 0;
 
-        function randomColor() {
-            return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+        // Enhanced color palette
+        const colorPalettes = [
+            ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24'],
+            ['#6c5ce7', '#fd79a8', '#fdcb6e', '#e17055'],
+            ['#00b894', '#00cec9', '#0984e3', '#6c5ce7'],
+            ['#e84393', '#fd79a8', '#ff7675', '#fab1a0'],
+            ['#00b894', '#55efc4', '#81ecec', '#74b9ff'],
+            ['#a29bfe', '#fd79a8', '#fdcb6e', '#fd79a8'],
+            ['#ff7675', '#74b9ff', '#55efc4', '#fdcb6e']
+        ];
+
+        function getRandomColorPalette() {
+            return colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
         }
 
         function changeBackground() {
-            document.documentElement.style.setProperty('--color1', randomColor());
-            document.documentElement.style.setProperty('--color2', randomColor());
+            const colors = getRandomColorPalette();
+            document.documentElement.style.setProperty('--color1', colors[0]);
+            document.documentElement.style.setProperty('--color2', colors[1]);
+            document.documentElement.style.setProperty('--color3', colors[2]);
+            document.documentElement.style.setProperty('--color4', colors[3]);
+        }
+
+        function createMusicalNote() {
+            const notes = ['♪', '♫', '♬', '♭', '♯', '𝄞'];
+            const note = document.createElement('div');
+            note.className = 'musical-note';
+            note.textContent = notes[Math.floor(Math.random() * notes.length)];
+            note.style.left = Math.random() * 100 + '%';
+            note.style.top = Math.random() * 100 + '%';
+            note.style.animationDelay = Math.random() * 4 + 's';
+            note.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            document.body.appendChild(note);
+
+            setTimeout(() => {
+                if (note.parentNode) {
+                    note.parentNode.removeChild(note);
+                }
+            }, 6000);
+        }
+
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 6 + 's';
+            particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+            document.body.appendChild(particle);
+
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, 8000);
+        }
+
+        function startVisualEffects() {
+            // Create musical notes periodically
+            setInterval(createMusicalNote, 2000);
+            
+            // Create particles periodically
+            setInterval(createParticle, 1000);
         }
 
         function hasConsecutiveDuplicates(arr) {
@@ -126,8 +351,17 @@
             titleEl.textContent = song.title || 'بدون عنوان';
             poetEl.textContent = song.poet || 'ناشناس';
             lyricsEl.innerHTML = (song.lyric || 'بدون شعر').replace(/\n/g, '<br>');
+            
+            // Remove loading class
+            titleEl.classList.remove('loading');
+            lyricsEl.classList.remove('loading');
+            
+            // Change colors for each track
             changeBackground();
             errorEl.textContent = '';
+            
+            // Hide click hint
+            clickHintEl.style.display = 'none';
         }
 
         function playNext() {
@@ -147,6 +381,7 @@
         document.body.addEventListener('click', () => {
             if (audio.paused && playlist.length > 0) {
                 audio.play().catch(e => console.error('Initial playback failed:', e));
+                clickHintEl.style.display = 'none';
             }
         }, { once: true });
 
@@ -166,7 +401,9 @@
 
                 if (songs.length === 0) {
                     titleEl.textContent = 'خطا';
+                    titleEl.classList.remove('loading');
                     lyricsEl.textContent = '';
+                    lyricsEl.classList.remove('loading');
                     errorEl.textContent = 'هیچ آهنگ معتبری در فایل یافت نشد.';
                     return;
                 }
@@ -175,18 +412,27 @@
                 const firstSong = playlist[0];
                 audio.src = firstSong.url;
                 updateDisplay(firstSong);
+                
+                // Start visual effects
+                startVisualEffects();
+                
                 audio.play().catch(e => {
                     console.error('Initial playback failed:', e);
-                    errorEl.textContent = 'برای شروع پخش، صفحه را لمس کنید.';
+                    clickHintEl.style.display = 'block';
                 });
             },
             error: function(error) {
                 console.error('Error loading CSV:', error);
                 titleEl.textContent = 'خطا در بارگذاری';
+                titleEl.classList.remove('loading');
                 lyricsEl.textContent = '';
+                lyricsEl.classList.remove('loading');
                 errorEl.textContent = 'لطفاً اتصال اینترنت را بررسی کنید یا فایل را بررسی کنید.';
             }
         });
+
+        // Initialize background
+        changeBackground();
     </script>
 </body>
 </html>
