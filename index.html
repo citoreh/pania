@@ -125,7 +125,7 @@
         function updateDisplay(song) {
             titleEl.textContent = song.title || 'بدون عنوان';
             poetEl.textContent = song.poet || 'ناشناس';
-            lyricsEl.innerHTML = (song.lyrics || 'بدون شعر').replace(/\n/g, '<br>');
+            lyricsEl.innerHTML = (song.lyric || 'بدون شعر').replace(/\n/g, '<br>');
             changeBackground();
             errorEl.textContent = '';
         }
@@ -137,21 +137,19 @@
             audio.play().catch(e => {
                 console.error('Playback error:', e);
                 errorEl.textContent = 'خطا در پخش صدا. به آهنگ بعدی می‌رویم...';
-                setTimeout(playNext, 1000); // Try next song after delay
+                setTimeout(playNext, 1000);
             });
             updateDisplay(song);
         }
 
         audio.addEventListener('ended', playNext);
 
-        // Handle user interaction to enable autoplay
         document.body.addEventListener('click', () => {
             if (audio.paused && playlist.length > 0) {
                 audio.play().catch(e => console.error('Initial playback failed:', e));
             }
         }, { once: true });
 
-        // Load CSV with PapaParse
         Papa.parse(csvUrl, {
             download: true,
             header: true,
@@ -159,10 +157,10 @@
             complete: function(results) {
                 const songs = results.data
                     .map(row => ({
-                        title: row.Title?.trim(),
-                        poet: row.Poet?.trim(),
-                        lyrics: row.Lyrics?.trim(),
-                        url: row.URL?.trim()
+                        title: row.title?.trim(),
+                        poet: row.poet?.trim(),
+                        lyric: row.lyric?.trim(),
+                        url: row.url?.trim()
                     }))
                     .filter(song => song.url && song.title && song.url.startsWith('http'));
 
