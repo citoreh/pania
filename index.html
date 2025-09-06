@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Persian Songs Player</title>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -23,15 +24,9 @@
         }
 
         @keyframes gradientShift {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         #lyrics-container {
@@ -68,6 +63,11 @@
         #audio {
             display: none;
         }
+
+        #error {
+            color: #ff4444;
+            font-size: 1.2em;
+        }
     </style>
 </head>
 <body>
@@ -75,6 +75,7 @@
         <h1 id="title">در حال بارگذاری...</h1>
         <h2 id="poet"></h2>
         <div id="lyrics">در حال بارگذاری اشعار...</div>
+        <div id="error"></div>
     </div>
     <audio id="audio" preload="auto"></audio>
 
@@ -84,6 +85,7 @@
         const titleEl = document.getElementById('title');
         const poetEl = document.getElementById('poet');
         const lyricsEl = document.getElementById('lyrics');
+        const errorEl = document.getElementById('error');
 
         let playlist = [];
         let currentIndex = 0;
@@ -109,72 +111,84 @@
         function shuffleNoConsecutiveDuplicates(arr) {
             let shuffled = [...arr];
             let attempts = 0;
-            const maxAttempts = 100; // Prevent infinite loop
+            const maxAttempts = 100;
             do {
-                // Fisher-Yates shuffle
                 for (let i = shuffled.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
                 }
                 attempts++;
             } while (hasConsecutiveDuplicates(shuffled) && attempts < maxAttempts);
-            // If still has duplicates, proceed anyway (rare case)
             return shuffled;
         }
 
         function updateDisplay(song) {
-            titleEl.textContent = song.title;
-            poetEl.textContent = song.poet;
-            lyricsEl.innerHTML = song.lyrics.replace(/\n/g, '<br>');
+            titleEl.textContent = song.title || 'بدون عنوان';
+            poetEl.textContent = song.poet || 'ناشناس';
+            lyricsEl.innerHTML = (song.lyrics || 'بدون شعر').replace(/\n/g, '<br>');
             changeBackground();
+            errorEl.textContent = '';
         }
 
         function playNext() {
             currentIndex = (currentIndex + 1) % playlist.length;
             const song = playlist[currentIndex];
             audio.src = song.url;
-            audio.play().catch(e => console.log('Autoplay prevented:', e));
+            audio.play().catch(e => {
+                console.error('Playback error:', e);
+                errorEl.textContent = 'خطا در پخش صدا. به آهنگ بعدی می‌رویم...';
+                setTimeout(playNext, 1000); // Try next song after delay
+            });
             updateDisplay(song);
         }
 
         audio.addEventListener('ended', playNext);
 
-        // Load CSV
-        fetch(csvUrl)
-            .then(response => response.text())
-            .then(csvText => {
-                const lines = csvText.trim().split('\n');
-                if (lines.length < 2) {
-                    throw new Error('No data in CSV');
-                }
-                // Simple CSV parsing assuming no commas in fields or quoted properly
-                // For better handling, this assumes fields are not comma-separated within
-                const songs = lines.slice(1).map(line => {
-                    const parts = line.split(',');
-                    if (parts.length < 4) return null;
-                    return {
-                        title: parts[0].replace(/"/g, '').trim(),
-                        poet: parts[1].replace(/"/g, '').trim(),
-                        lyrics: parts[2].replace(/"/g, '').trim(),
-                        url: parts[3].replace(/"/g, '').trim()
-                    };
-                }).filter(song => song && song.url && song.title);
+        // Handle user interaction to enable autoplay
+        document.body.addEventListener('click', () => {
+            if (audio.paused && playlist.length > 0) {
+                audio.play().catch(e => console.error('Initial playback failed:', e));
+            }
+        }, { once: true });
+
+        // Load CSV with PapaParse
+        Papa.parse(csvUrl, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                const songs = results.data
+                    .map(row => ({
+                        title: row.Title?.trim(),
+                        poet: row.Poet?.trim(),
+                        lyrics: row.Lyrics?.trim(),
+                        url: row.URL?.trim()
+                    }))
+                    .filter(song => song.url && song.title && song.url.startsWith('http'));
 
                 if (songs.length === 0) {
-                    throw new Error('No valid songs found');
+                    titleEl.textContent = 'خطا';
+                    lyricsEl.textContent = '';
+                    errorEl.textContent = 'هیچ آهنگ معتبری در فایل یافت نشد.';
+                    return;
                 }
 
                 playlist = shuffleNoConsecutiveDuplicates(songs);
                 const firstSong = playlist[0];
                 audio.src = firstSong.url;
-                audio.play().catch(e => console.log('Autoplay prevented:', e));
                 updateDisplay(firstSong);
-            })
-            .catch(error => {
+                audio.play().catch(e => {
+                    console.error('Initial playback failed:', e);
+                    errorEl.textContent = 'برای شروع پخش، صفحه را لمس کنید.';
+                });
+            },
+            error: function(error) {
                 console.error('Error loading CSV:', error);
                 titleEl.textContent = 'خطا در بارگذاری';
-                lyricsEl.textContent = 'لطفاً اتصال اینترنت را بررسی کنید.';
-            });
+                lyricsEl.textContent = '';
+                errorEl.textContent = 'لطفاً اتصال اینترنت را بررسی کنید یا فایل را بررسی کنید.';
+            }
+        });
     </script>
 </body>
 </html>
