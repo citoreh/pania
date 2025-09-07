@@ -67,8 +67,8 @@
         }
 
         @keyframes wave {
-            0%, 100% { transform: translateX(0px); }
-            50% { transform: translateX(-50px); }
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
         .content {
@@ -232,19 +232,34 @@
             0%, 100% { transform: translateX(-50%) translateY(0px); opacity: 0.7; }
             50% { transform: translateX(-50%) translateY(-10px); opacity: 1; }
         }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 10px;
+            right: 20px;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            z-index: 10;
+            direction: ltr;
+        }
     </style>
 </head>
 <body>
     <div class="wave"></div>
     
     <div class="content">
-        <h1 id="title" class="loading">در حال بارگذاری...</h1>
+        <h1 id="title" class="loading">Ø¯Ø± Ø­Ø§Ù„ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ...</h1>
         <h2 id="poet"></h2>
-        <div id="lyrics" class="loading">در حال بارگذاری اشعار...</div>
+        <div id="lyrics" class="loading">Ø¯Ø± Ø­Ø§Ù„ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø§Ø´Ø¹Ø§Ø±...</div>
         <div id="error"></div>
     </div>
     
-    <div id="click-hint" class="click-hint" style="display: none;">برای شروع پخش، صفحه را لمس کنید</div>
+    <div id="click-hint" class="click-hint" style="display: none;">Ø¨Ø±Ø§ÛŒ Ø´Ø±ÙˆØ¹ Ù¾Ø®Ø´ØŒ ØµÙØ­Ù‡ Ø±Ø§ Ù„Ù…Ø³ Ú©Ù†ÛŒØ¯</div>
+    
+    <div class="footer">Copyright Pania 2025</div>
     
     <audio id="audio" preload="auto"></audio>
 
@@ -284,7 +299,7 @@
         }
 
         function createMusicalNote() {
-            const notes = ['♪', '♫', '♬', '♭', '♯', '𝄞'];
+            const notes = ['â™ª', 'â™«', 'â™¬', 'â™­', 'â™¯', 'ð„ž'];
             const note = document.createElement('div');
             note.className = 'musical-note';
             note.textContent = notes[Math.floor(Math.random() * notes.length)];
@@ -348,9 +363,13 @@
         }
 
         function updateDisplay(song) {
-            titleEl.textContent = song.title || 'بدون عنوان';
-            poetEl.textContent = song.poet || 'ناشناس';
-            lyricsEl.innerHTML = (song.lyric || 'بدون شعر').replace(/\n/g, '<br>');
+            const songTitle = song.title || 'Ø¨Ø¯ÙˆÙ† Ø¹Ù†ÙˆØ§Ù†';
+            titleEl.textContent = songTitle;
+            poetEl.textContent = song.poet || 'Ù†Ø§Ø´Ù†Ø§Ø³';
+            lyricsEl.innerHTML = (song.lyric || 'Ø¨Ø¯ÙˆÙ† Ø´Ø¹Ø±').replace(/\n/g, '<br>');
+            
+            // Update page title
+            document.title = songTitle;
             
             // Remove loading class
             titleEl.classList.remove('loading');
@@ -370,7 +389,7 @@
             audio.src = song.url;
             audio.play().catch(e => {
                 console.error('Playback error:', e);
-                errorEl.textContent = 'خطا در پخش صدا. به آهنگ بعدی می‌رویم...';
+                errorEl.textContent = 'Ø®Ø·Ø§ Ø¯Ø± Ù¾Ø®Ø´ ØµØ¯Ø§. Ø¨Ù‡ Ø¢Ù‡Ù†Ú¯ Ø¨Ø¹Ø¯ÛŒ Ù…ÛŒâ€ŒØ±ÙˆÛŒÙ…...';
                 setTimeout(playNext, 1000);
             });
             updateDisplay(song);
@@ -400,11 +419,11 @@
                     .filter(song => song.url && song.title && song.url.startsWith('http'));
 
                 if (songs.length === 0) {
-                    titleEl.textContent = 'خطا';
+                    titleEl.textContent = 'Ø®Ø·Ø§';
                     titleEl.classList.remove('loading');
                     lyricsEl.textContent = '';
                     lyricsEl.classList.remove('loading');
-                    errorEl.textContent = 'هیچ آهنگ معتبری در فایل یافت نشد.';
+                    errorEl.textContent = 'Ù‡ÛŒÚ† Ø¢Ù‡Ù†Ú¯ Ù…Ø¹ØªØ¨Ø±ÛŒ Ø¯Ø± ÙØ§ÛŒÙ„ ÛŒØ§ÙØª Ù†Ø´Ø¯.';
                     return;
                 }
 
@@ -423,11 +442,11 @@
             },
             error: function(error) {
                 console.error('Error loading CSV:', error);
-                titleEl.textContent = 'خطا در بارگذاری';
+                titleEl.textContent = 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ';
                 titleEl.classList.remove('loading');
                 lyricsEl.textContent = '';
                 lyricsEl.classList.remove('loading');
-                errorEl.textContent = 'لطفاً اتصال اینترنت را بررسی کنید یا فایل را بررسی کنید.';
+                errorEl.textContent = 'Ù„Ø·ÙØ§Ù‹ Ø§ØªØµØ§Ù„ Ø§ÛŒÙ†ØªØ±Ù†Øª Ø±Ø§ Ø¨Ø±Ø±Ø³ÛŒ Ú©Ù†ÛŒØ¯ ÛŒØ§ ÙØ§ÛŒÙ„ Ø±Ø§ Ø¨Ø±Ø±Ø³ÛŒ Ú©Ù†ÛŒØ¯.';
             }
         });
 
