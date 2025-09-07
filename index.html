@@ -251,13 +251,13 @@
     <div class="wave"></div>
     
     <div class="content">
-        <h1 id="title" class="loading">Ø¯Ø± Ø­Ø§Ù„ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ...</h1>
+        <h1 id="title" class="loading">در حال بارگذاری...</h1>
         <h2 id="poet"></h2>
-        <div id="lyrics" class="loading">Ø¯Ø± Ø­Ø§Ù„ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø§Ø´Ø¹Ø§Ø±...</div>
+        <div id="lyrics" class="loading">در حال بارگذاری اشعار...</div>
         <div id="error"></div>
     </div>
     
-    <div id="click-hint" class="click-hint" style="display: none;">Ø¨Ø±Ø§ÛŒ Ø´Ø±ÙˆØ¹ Ù¾Ø®Ø´ØŒ ØµÙØ­Ù‡ Ø±Ø§ Ù„Ù…Ø³ Ú©Ù†ÛŒØ¯</div>
+    <div id="click-hint" class="click-hint" style="display: none;">برای شروع پخش، صفحه را لمس کنید</div>
     
     <div class="footer">Copyright Pania 2025</div>
     
@@ -363,10 +363,9 @@
         }
 
         function updateDisplay(song) {
-            const songTitle = song.title || 'Ø¨Ø¯ÙˆÙ† Ø¹Ù†ÙˆØ§Ù†';
-            titleEl.textContent = songTitle;
-            poetEl.textContent = song.poet || 'Ù†Ø§Ø´Ù†Ø§Ø³';
-            lyricsEl.innerHTML = (song.lyric || 'Ø¨Ø¯ÙˆÙ† Ø´Ø¹Ø±').replace(/\n/g, '<br>');
+            titleEl.textContent = song.title || 'بدون عنوان';
+            poetEl.textContent = song.poet || 'ناشناس';
+            lyricsEl.innerHTML = (song.lyric || 'بدون شعر').replace(/\n/g, '<br>');
             
             // Update page title
             document.title = songTitle;
@@ -389,7 +388,7 @@
             audio.src = song.url;
             audio.play().catch(e => {
                 console.error('Playback error:', e);
-                errorEl.textContent = 'Ø®Ø·Ø§ Ø¯Ø± Ù¾Ø®Ø´ ØµØ¯Ø§. Ø¨Ù‡ Ø¢Ù‡Ù†Ú¯ Ø¨Ø¹Ø¯ÛŒ Ù…ÛŒâ€ŒØ±ÙˆÛŒÙ…...';
+                errorEl.textContent = 'خطا در پخش صدا. به آهنگ بعدی می‌رویم...';
                 setTimeout(playNext, 1000);
             });
             updateDisplay(song);
@@ -419,11 +418,11 @@
                     .filter(song => song.url && song.title && song.url.startsWith('http'));
 
                 if (songs.length === 0) {
-                    titleEl.textContent = 'Ø®Ø·Ø§';
+                    titleEl.textContent = 'خطا';
                     titleEl.classList.remove('loading');
                     lyricsEl.textContent = '';
                     lyricsEl.classList.remove('loading');
-                    errorEl.textContent = 'Ù‡ÛŒÚ† Ø¢Ù‡Ù†Ú¯ Ù…Ø¹ØªØ¨Ø±ÛŒ Ø¯Ø± ÙØ§ÛŒÙ„ ÛŒØ§ÙØª Ù†Ø´Ø¯.';
+                    errorEl.textContent = 'هیچ آهنگ معتبری در فایل یافت نشد.';
                     return;
                 }
 
@@ -442,11 +441,11 @@
             },
             error: function(error) {
                 console.error('Error loading CSV:', error);
-                titleEl.textContent = 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ';
+                titleEl.textContent = 'خطا در بارگذاری';
                 titleEl.classList.remove('loading');
                 lyricsEl.textContent = '';
                 lyricsEl.classList.remove('loading');
-                errorEl.textContent = 'Ù„Ø·ÙØ§Ù‹ Ø§ØªØµØ§Ù„ Ø§ÛŒÙ†ØªØ±Ù†Øª Ø±Ø§ Ø¨Ø±Ø±Ø³ÛŒ Ú©Ù†ÛŒØ¯ ÛŒØ§ ÙØ§ÛŒÙ„ Ø±Ø§ Ø¨Ø±Ø±Ø³ÛŒ Ú©Ù†ÛŒØ¯.';
+                errorEl.textContent = 'لطفاً اتصال اینترنت را بررسی کنید یا فایل را بررسی کنید.';
             }
         });
 
