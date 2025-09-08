@@ -369,7 +369,7 @@
             lyricsEl.innerHTML = (song.lyric || 'بدون شعر').replace(/\n/g, '<br>');
             
             // Update page title
-            document.title = songTitle;
+            document.title = song.title || 'Pania Music Player';
             
             // Remove loading class
             titleEl.classList.remove('loading');
