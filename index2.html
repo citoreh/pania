@@ -228,91 +228,6 @@
             100% { opacity: 1; }
         }
 
-        /* Admin Panel */
-        .admin-toggle {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 25px;
-            padding: 10px 15px;
-            color: white;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            z-index: 100;
-            font-size: 0.9rem;
-        }
-
-        .admin-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
-        }
-
-        .admin-panel {
-            position: fixed;
-            top: 0;
-            left: -400px;
-            width: 400px;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(20px);
-            color: white;
-            padding: 20px;
-            transition: left 0.3s ease;
-            z-index: 99;
-            overflow-y: auto;
-            direction: ltr;
-        }
-
-        .admin-panel.open {
-            left: 0;
-        }
-
-        .admin-panel h3 {
-            margin-bottom: 20px;
-            color: #4ecdc4;
-            text-align: center;
-            border-bottom: 2px solid #4ecdc4;
-            padding-bottom: 10px;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.1);
-            margin-bottom: 10px;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #4ecdc4;
-        }
-
-        .stat-item h4 {
-            color: #55efc4;
-            margin-bottom: 5px;
-            font-size: 1rem;
-        }
-
-        .stat-item p {
-            margin: 5px 0;
-            font-size: 0.9rem;
-        }
-
-        .close-admin {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .close-admin:hover {
-            color: #ff6b6b;
-        }
-
         /* Particle System */
         .particle {
             position: absolute;
@@ -342,6 +257,30 @@
             }
         }
 
+        /* API Status Indicator */
+        .api-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .api-status.online {
+            background: rgba(0, 184, 148, 0.3);
+            color: #55efc4;
+        }
+
+        .api-status.offline {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff6b6b;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .content {
@@ -353,11 +292,6 @@
                 padding: 15px;
             }
 
-            .admin-panel {
-                width: 90vw;
-                left: -90vw;
-            }
-
             .rating-buttons {
                 gap: 15px;
             }
@@ -366,6 +300,13 @@
                 width: 45px;
                 height: 45px;
                 font-size: 1.3rem;
+            }
+
+            .api-status {
+                top: 10px;
+                right: 10px;
+                font-size: 0.7rem;
+                padding: 6px 10px;
             }
         }
 
@@ -414,17 +355,8 @@
 <body>
     <div class="wave"></div>
     
-    <!-- Admin Toggle -->
-    <div class="admin-toggle" onclick="toggleAdmin()">📊 Admin</div>
-    
-    <!-- Admin Panel -->
-    <div class="admin-panel" id="adminPanel">
-        <button class="close-admin" onclick="toggleAdmin()">×</button>
-        <h3>Statistics Dashboard</h3>
-        <div id="adminContent">
-            <p>Loading statistics...</p>
-        </div>
-    </div>
+    <!-- API Status Indicator -->
+    <div class="api-status offline" id="apiStatus">⚫ API Offline</div>
     
     <div class="content">
         <h1 id="title" class="loading">در حال بارگذاری...</h1>
@@ -447,7 +379,10 @@
     <audio id="audio" preload="auto"></audio>
 
     <script>
+        // Configuration - Update these URLs to your actual API endpoints
+        const API_BASE_URL = 'https://your-api-domain.com/api'; // Replace with your API URL
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QP9XuvvqLrbzaQ0rV9WfSVHYOBKQgJZUTzTQeSpzyUSQbSxIkJUlPFc67K8k2aIDuB5mcPrjHMU/pub?output=csv';
+        
         const audio = document.getElementById('audio');
         const titleEl = document.getElementById('title');
         const poetEl = document.getElementById('poet');
@@ -456,20 +391,12 @@
         const clickHintEl = document.getElementById('click-hint');
         const likeBtn = document.getElementById('likeBtn');
         const dislikeBtn = document.getElementById('dislikeBtn');
+        const apiStatusEl = document.getElementById('apiStatus');
 
         let playlist = [];
         let currentIndex = 0;
         let currentSong = null;
-
-        // Statistics storage (in-memory for this session)
-        let statistics = {
-            plays: {}, // {songTitle: count}
-            likes: {}, // {songTitle: timestamp}
-            dislikes: {}, // {songTitle: timestamp}
-            totalPlays: 0,
-            totalLikes: 0,
-            totalDislikes: 0
-        };
+        let userId = generateUserId(); // Generate unique user ID for tracking
 
         // Enhanced color palette
         const colorPalettes = [
@@ -482,6 +409,10 @@
             ['#ff7675', '#74b9ff', '#55efc4', '#fdcb6e']
         ];
 
+        function generateUserId() {
+            return 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        }
+
         function getRandomColorPalette() {
             return colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
         }
@@ -492,6 +423,135 @@
             document.documentElement.style.setProperty('--color2', colors[1]);
             document.documentElement.style.setProperty('--color3', colors[2]);
             document.documentElement.style.setProperty('--color4', colors[3]);
+        }
+
+        // API Functions
+        async function sendToAPI(endpoint, data) {
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    updateAPIStatus(true);
+                    return await response.json();
+                } else {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('API Error:', error);
+                updateAPIStatus(false);
+                return null;
+            }
+        }
+
+        async function getSongRating(songTitle) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/song-rating?title=${encodeURIComponent(songTitle)}&userId=${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    updateAPIStatus(true);
+                    return await response.json();
+                } else {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('API Error:', error);
+                updateAPIStatus(false);
+                return null;
+            }
+        }
+
+        function updateAPIStatus(isOnline) {
+            if (isOnline) {
+                apiStatusEl.className = 'api-status online';
+                apiStatusEl.textContent = '🟢 API Online';
+            } else {
+                apiStatusEl.className = 'api-status offline';
+                apiStatusEl.textContent = '🔴 API Offline';
+            }
+        }
+
+        async function trackPlay(songTitle, poet, duration = null) {
+            if (!songTitle) return;
+            
+            const data = {
+                userId: userId,
+                songTitle: songTitle,
+                poet: poet || 'Unknown',
+                timestamp: new Date().toISOString(),
+                duration: duration,
+                action: 'play'
+            };
+            
+            await sendToAPI('/track-play', data);
+        }
+
+        async function rateSong(type) {
+            if (!currentSong || !currentSong.title) return;
+            
+            const songTitle = currentSong.title;
+            
+            // Reset button states
+            likeBtn.classList.remove('active');
+            dislikeBtn.classList.remove('active');
+            
+            const data = {
+                userId: userId,
+                songTitle: songTitle,
+                poet: currentSong.poet || 'Unknown',
+                rating: type, // 'like' or 'dislike'
+                timestamp: new Date().toISOString()
+            };
+            
+            const result = await sendToAPI('/rate-song', data);
+            
+            if (result) {
+                if (type === 'like') {
+                    likeBtn.classList.add('active');
+                    likeBtn.style.background = 'linear-gradient(45deg, #00a085, #4dd0b1)';
+                    dislikeBtn.style.background = 'linear-gradient(45deg, #e74c3c, #ff6b6b)';
+                } else if (type === 'dislike') {
+                    dislikeBtn.classList.add('active');
+                    dislikeBtn.style.background = 'linear-gradient(45deg, #c0392b, #e55656)';
+                    likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
+                }
+                
+                // Remove active state after animation
+                setTimeout(() => {
+                    likeBtn.classList.remove('active');
+                    dislikeBtn.classList.remove('active');
+                }, 1000);
+            }
+        }
+
+        async function updateRatingButtons() {
+            if (!currentSong || !currentSong.title) return;
+            
+            const rating = await getSongRating(currentSong.title);
+            
+            // Reset button states
+            likeBtn.classList.remove('active');
+            dislikeBtn.classList.remove('active');
+            likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
+            dislikeBtn.style.background = 'linear-gradient(45deg, #e74c3c, #ff6b6b)';
+            
+            if (rating && rating.rating) {
+                if (rating.rating === 'like') {
+                    likeBtn.style.background = 'linear-gradient(45deg, #00a085, #4dd0b1)';
+                } else if (rating.rating === 'dislike') {
+                    dislikeBtn.style.background = 'linear-gradient(45deg, #c0392b, #e55656)';
+                }
+            }
         }
 
         function createMusicalNote() {
@@ -558,75 +618,7 @@
             return shuffled;
         }
 
-        function trackPlay(songTitle) {
-            if (!songTitle) return;
-            
-            statistics.plays[songTitle] = (statistics.plays[songTitle] || 0) + 1;
-            statistics.totalPlays++;
-        }
-
-        function rateSong(type) {
-            if (!currentSong || !currentSong.title) return;
-            
-            const songTitle = currentSong.title;
-            
-            // Reset button states
-            likeBtn.classList.remove('active');
-            dislikeBtn.classList.remove('active');
-            
-            if (type === 'like') {
-                likeBtn.classList.add('active');
-                // Remove from dislikes if previously disliked
-                if (statistics.dislikes[songTitle]) {
-                    delete statistics.dislikes[songTitle];
-                    statistics.totalDislikes--;
-                }
-                // Add to likes
-                statistics.likes[songTitle] = new Date().toISOString();
-                statistics.totalLikes++;
-            } else if (type === 'dislike') {
-                dislikeBtn.classList.add('active');
-                // Remove from likes if previously liked
-                if (statistics.likes[songTitle]) {
-                    delete statistics.likes[songTitle];
-                    statistics.totalLikes--;
-                }
-                // Add to dislikes
-                statistics.dislikes[songTitle] = new Date().toISOString();
-                statistics.totalDislikes++;
-            }
-            
-            // Remove active state after animation
-            setTimeout(() => {
-                likeBtn.classList.remove('active');
-                dislikeBtn.classList.remove('active');
-            }, 1000);
-        }
-
-        function updateRatingButtons() {
-            if (!currentSong || !currentSong.title) return;
-            
-            const songTitle = currentSong.title;
-            
-            // Reset button states
-            likeBtn.classList.remove('active');
-            dislikeBtn.classList.remove('active');
-            
-            // Set current state
-            if (statistics.likes[songTitle]) {
-                likeBtn.style.background = 'linear-gradient(45deg, #00a085, #4dd0b1)';
-            } else {
-                likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
-            }
-            
-            if (statistics.dislikes[songTitle]) {
-                dislikeBtn.style.background = 'linear-gradient(45deg, #c0392b, #e55656)';
-            } else {
-                dislikeBtn.style.background = 'linear-gradient(45deg, #e74c3c, #ff6b6b)';
-            }
-        }
-
-        function updateDisplay(song) {
+        async function updateDisplay(song) {
             currentSong = song;
             titleEl.textContent = song.title || 'بدون عنوان';
             poetEl.textContent = song.poet || 'ناشناس';
@@ -647,10 +639,10 @@
             clickHintEl.style.display = 'none';
             
             // Update rating buttons
-            updateRatingButtons();
+            await updateRatingButtons();
             
             // Track play
-            trackPlay(song.title);
+            await trackPlay(song.title, song.poet);
         }
 
         function playNext() {
@@ -665,82 +657,11 @@
             updateDisplay(song);
         }
 
-        function toggleAdmin() {
-            const adminPanel = document.getElementById('adminPanel');
-            adminPanel.classList.toggle('open');
-            if (adminPanel.classList.contains('open')) {
-                updateAdminPanel();
-            }
-        }
-
-        function updateAdminPanel() {
-            const adminContent = document.getElementById('adminContent');
-            
-            let html = `
-                <div style="margin-bottom: 30px; text-align: center;">
-                    <h4 style="color: #55efc4;">Overall Statistics</h4>
-                    <p>Total Plays: ${statistics.totalPlays}</p>
-                    <p>Total Likes: ${statistics.totalLikes}</p>
-                    <p>Total Dislikes: ${statistics.totalDislikes}</p>
-                </div>
-            `;
-            
-            // Top played songs
-            const playEntries = Object.entries(statistics.plays).sort((a, b) => b[1] - a[1]);
-            if (playEntries.length > 0) {
-                html += '<h4 style="color: #4ecdc4; margin-bottom: 15px;">Most Played Songs</h4>';
-                playEntries.slice(0, 10).forEach(([title, count]) => {
-                    html += `
-                        <div class="stat-item">
-                            <h4>${title}</h4>
-                            <p>Plays: ${count}</p>
-                        </div>
-                    `;
-                });
-            }
-            
-            // Liked songs
-            const likedSongs = Object.entries(statistics.likes);
-            if (likedSongs.length > 0) {
-                html += '<h4 style="color: #00b894; margin: 20px 0 15px 0;">Liked Songs</h4>';
-                likedSongs.forEach(([title, timestamp]) => {
-                    const date = new Date(timestamp).toLocaleString();
-                    html += `
-                        <div class="stat-item" style="border-left-color: #00b894;">
-                            <h4>${title}</h4>
-                            <p>Liked on: ${date}</p>
-                        </div>
-                    `;
-                });
-            }
-            
-            // Disliked songs
-            const dislikedSongs = Object.entries(statistics.dislikes);
-            if (dislikedSongs.length > 0) {
-                html += '<h4 style="color: #e74c3c; margin: 20px 0 15px 0;">Disliked Songs</h4>';
-                dislikedSongs.forEach(([title, timestamp]) => {
-                    const date = new Date(timestamp).toLocaleString();
-                    html += `
-                        <div class="stat-item" style="border-left-color: #e74c3c;">
-                            <h4>${title}</h4>
-                            <p>Disliked on: ${date}</p>
-                        </div>
-                    `;
-                });
-            }
-            
-            if (playEntries.length === 0 && likedSongs.length === 0 && dislikedSongs.length === 0) {
-                html += '<p style="text-align: center; opacity: 0.7;">No statistics available yet. Play some music and rate songs!</p>';
-            }
-            
-            adminContent.innerHTML = html;
-        }
-
         audio.addEventListener('ended', playNext);
 
         document.body.addEventListener('click', (e) => {
             // Don't trigger auto-play when clicking on buttons
-            if (e.target.closest('.rating-btn') || e.target.closest('.admin-toggle') || e.target.closest('.admin-panel')) {
+            if (e.target.closest('.rating-btn') || e.target.closest('.api-status')) {
                 return;
             }
             
@@ -798,6 +719,11 @@
 
         // Initialize background
         changeBackground();
+        
+        // Test API connection on load
+        setTimeout(() => {
+            sendToAPI('/health', { test: true });
+        }, 1000);
     </script>
 </body>
 </html>
