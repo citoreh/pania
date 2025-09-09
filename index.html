@@ -10,6 +10,9 @@
 
   gtag('config', 'G-Q4WCFNWNF1');
 </script>
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pania Music Player</title>
@@ -28,14 +31,14 @@
             text-align: center;
             direction: rtl;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             position: relative;
             background: linear-gradient(45deg, var(--color1, #ff6b6b), var(--color2, #4ecdc4), var(--color3, #a8e6cf), var(--color4, #ffd93d));
             background-size: 400% 400%;
+            background-attachment: fixed;
             animation: gradientFlow 8s ease infinite;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 80px 0 20px 0;
         }
 
         @keyframes gradientFlow {
@@ -80,12 +83,89 @@
             50% { transform: translateY(-10px); }
         }
 
+        /* Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .playlist-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .playlist-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .api-status {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .api-status.online {
+            background: rgba(0, 184, 148, 0.3);
+            color: #55efc4;
+        }
+
+        .api-status.offline {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff6b6b;
+        }
+
         .content {
             position: relative;
             z-index: 10;
             max-width: 800px;
-            padding: 40px 20px;
+            margin: 0 auto;
+            padding: 20px;
             text-align: center;
+            min-height: calc(100vh - 100px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         #title {
@@ -120,58 +200,63 @@
             100% { opacity: 1; }
         }
 
-        /* Rating Buttons */
-        .rating-buttons {
+        /* Action Buttons */
+        .action-buttons {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
-        .rating-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
+        .action-btn {
+            padding: 12px 20px;
             border: none;
-            font-size: 1.5rem;
-            font-weight: bold;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            min-width: 120px;
         }
 
-        .rating-btn:hover {
-            transform: scale(1.1);
+        .action-btn:hover {
+            transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .rating-btn.active {
-            transform: scale(1.2);
+        .action-btn.active {
+            transform: scale(1.05);
             animation: buttonPulse 1s ease-in-out;
         }
 
         @keyframes buttonPulse {
-            0%, 100% { transform: scale(1.2); }
-            50% { transform: scale(1.3); }
+            0%, 100% { transform: scale(1.05); }
+            50% { transform: scale(1.1); }
         }
 
         .like-btn {
             background: linear-gradient(45deg, #00b894, #55efc4);
         }
 
-        .like-btn:hover, .like-btn.active {
-            background: linear-gradient(45deg, #00a085, #4dd0b1);
-        }
-
         .dislike-btn {
             background: linear-gradient(45deg, #e74c3c, #ff6b6b);
         }
 
-        .dislike-btn:hover, .dislike-btn.active {
-            background: linear-gradient(45deg, #c0392b, #e55656);
+        .playlist-add-btn {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        }
+
+        .playlist-add-btn:hover, .playlist-add-btn.active {
+            background: linear-gradient(45deg, #8e44ad, #9b59b6);
+        }
+
+        .playlist-add-btn.added {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
         }
 
         #lyrics {
@@ -180,13 +265,14 @@
             white-space: pre-wrap;
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
             animation: lyricsGlow 4s ease-in-out infinite;
-            max-height: 60vh;
+            max-height: 50vh;
             overflow-y: auto;
             padding: 20px;
             border-radius: 10px;
             backdrop-filter: blur(5px);
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
         }
 
         @keyframes lyricsGlow {
@@ -228,6 +314,121 @@
             100% { opacity: 1; }
         }
 
+        /* Playlist Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #333;
+            direction: rtl;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .modal-header h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .playlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .playlist-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .playlist-item h4 {
+            color: #2d3748;
+            font-size: 1rem;
+            margin-bottom: 3px;
+        }
+
+        .playlist-item p {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .remove-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .empty-playlist {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
+
+        .empty-playlist .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
         /* Particle System */
         .particle {
             position: absolute;
@@ -257,56 +458,79 @@
             }
         }
 
-        /* API Status Indicator */
-        .api-status {
+        /* Toast Notifications */
+        .toast {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            z-index: 100;
+            z-index: 2000;
             transition: all 0.3s ease;
+            opacity: 0;
         }
 
-        .api-status.online {
-            background: rgba(0, 184, 148, 0.3);
-            color: #55efc4;
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
 
-        .api-status.offline {
-            background: rgba(231, 76, 60, 0.3);
-            color: #ff6b6b;
+        .toast.success {
+            background: rgba(0, 184, 148, 0.8);
+        }
+
+        .toast.error {
+            background: rgba(231, 76, 60, 0.8);
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+            
             .content {
-                padding: 20px 10px;
+                padding: 10px;
+            }
+
+            .top-bar {
+                padding: 10px 15px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .user-info {
+                font-size: 0.8rem;
+            }
+
+            .playlist-btn {
+                padding: 6px 12px;
+                font-size: 0.7rem;
             }
             
             #lyrics {
-                max-height: 50vh;
+                max-height: 40vh;
                 padding: 15px;
+                margin-bottom: 15px;
             }
 
-            .rating-buttons {
-                gap: 15px;
+            .action-buttons {
+                gap: 10px;
             }
 
-            .rating-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 1.3rem;
+            .action-btn {
+                padding: 10px 15px;
+                font-size: 0.8rem;
+                min-width: 100px;
             }
 
-            .api-status {
-                top: 10px;
-                right: 10px;
-                font-size: 0.7rem;
-                padding: 6px 10px;
+            .modal-content {
+                padding: 20px;
+                margin: 10px;
             }
         }
 
@@ -349,23 +573,47 @@
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
             z-index: 10;
             direction: ltr;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
     <div class="wave"></div>
     
-    <!-- API Status Indicator -->
-    <div class="api-status offline" id="apiStatus">⚫ API Offline</div>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="user-info" id="userInfo">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <span id="userName">مهمان</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="api-status offline" id="apiStatus">⚫ API Offline</div>
+            <button class="playlist-btn" onclick="togglePlaylist()">🎵 پلی لیست من</button>
+        </div>
+    </div>
+    
+    <!-- Playlist Modal -->
+    <div class="modal" id="playlistModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎵 پلی لیست من</h2>
+                <button class="close-btn" onclick="togglePlaylist()">×</button>
+            </div>
+            <div id="playlistContent">
+                <div class="loading">در حال بارگذاری پلی لیست...</div>
+            </div>
+        </div>
+    </div>
     
     <div class="content">
         <h1 id="title" class="loading">در حال بارگذاری...</h1>
         <h2 id="poet"></h2>
         
-        <!-- Rating Buttons -->
-        <div class="rating-buttons">
-            <button class="rating-btn like-btn" id="likeBtn" onclick="rateSong('like')" title="پسندیدن">O</button>
-            <button class="rating-btn dislike-btn" id="dislikeBtn" onclick="rateSong('dislike')" title="نپسندیدن">X</button>
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="action-btn like-btn" id="likeBtn" onclick="rateSong('like')" title="پسندیدن">👍 پسندیدم</button>
+            <button class="action-btn playlist-add-btn" id="playlistAddBtn" onclick="togglePlaylistSong()" title="افزودن به پلی لیست">➕ افزودن</button>
+            <button class="action-btn dislike-btn" id="dislikeBtn" onclick="rateSong('dislike')" title="نپسندیدن">👎 نپسندیدم</button>
         </div>
         
         <div id="lyrics" class="loading">در حال بارگذاری اشعار...</div>
@@ -374,12 +622,15 @@
     
     <div id="click-hint" class="click-hint" style="display: none;">برای شروع پخش، صفحه را لمس کنید</div>
     
+    <!-- Toast for notifications -->
+    <div class="toast" id="toast"></div>
+    
     <div class="footer">Copyright Pania 2025</div>
     
     <audio id="audio" preload="auto"></audio>
 
     <script>
-        // Configuration - Update this URL after Firebase deployment
+        // Configuration - Update this URL to your Firebase Function URL
         const API_BASE_URL = 'https://us-central1-setareh-ded65.cloudfunctions.net/api'; // Replace 'pania-music' with your Firebase project ID
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QP9XuvvqLrbzaQ0rV9WfSVHYOBKQgJZUTzTQeSpzyUSQbSxIkJUlPFc67K8k2aIDuB5mcPrjHMU/pub?output=csv';
         
@@ -391,12 +642,62 @@
         const clickHintEl = document.getElementById('click-hint');
         const likeBtn = document.getElementById('likeBtn');
         const dislikeBtn = document.getElementById('dislikeBtn');
+        const playlistAddBtn = document.getElementById('playlistAddBtn');
         const apiStatusEl = document.getElementById('apiStatus');
+        const playlistModal = document.getElementById('playlistModal');
+        const userInfoEl = document.getElementById('userInfo');
+        const userNameEl = document.getElementById('userName');
+        const userAvatarEl = document.getElementById('userAvatar');
 
         let playlist = [];
         let currentIndex = 0;
         let currentSong = null;
-        let userId = generateUserId(); // Generate unique user ID for tracking
+        let telegramUser = null;
+        let userPlaylist = [];
+
+        // Initialize Telegram Web App
+        function initTelegram() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                
+                // Get user data from Telegram
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    telegramUser = tg.initDataUnsafe.user;
+                    updateUserInfo(telegramUser);
+                } else {
+                    // Fallback for testing outside Telegram
+                    telegramUser = {
+                        id: 'demo_user',
+                        first_name: 'کاربر',
+                        last_name: 'آزمایشی',
+                        username: 'demo'
+                    };
+                    updateUserInfo(telegramUser);
+                }
+                
+                // Set theme colors if needed
+                tg.setHeaderColor('#667eea');
+            } else {
+                // Fallback for testing outside Telegram
+                telegramUser = {
+                    id: 'demo_user',
+                    first_name: 'کاربر',
+                    last_name: 'آزمایشی',
+                    username: 'demo'
+                };
+                updateUserInfo(telegramUser);
+            }
+        }
+
+        function updateUserInfo(user) {
+            const displayName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+            userNameEl.textContent = displayName;
+            
+            // Create avatar with first letter
+            const firstLetter = user.first_name ? user.first_name[0].toUpperCase() : '👤';
+            userAvatarEl.textContent = firstLetter;
+        }
 
         // Enhanced color palette
         const colorPalettes = [
@@ -409,10 +710,6 @@
             ['#ff7675', '#74b9ff', '#55efc4', '#fdcb6e']
         ];
 
-        function generateUserId() {
-            return 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-        }
-
         function getRandomColorPalette() {
             return colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
         }
@@ -423,6 +720,18 @@
             document.documentElement.style.setProperty('--color2', colors[1]);
             document.documentElement.style.setProperty('--color3', colors[2]);
             document.documentElement.style.setProperty('--color4', colors[3]);
+        }
+
+        // Toast notifications
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
 
         // API Functions
@@ -449,9 +758,9 @@
             }
         }
 
-        async function getSongRating(songTitle) {
+        async function fetchFromAPI(endpoint) {
             try {
-                const response = await fetch(`${API_BASE_URL}/song-rating?title=${encodeURIComponent(songTitle)}&userId=${userId}`, {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -467,7 +776,7 @@
             } catch (error) {
                 console.error('API Error:', error);
                 updateAPIStatus(false);
-                return null;
+                throw error;
             }
         }
 
@@ -481,12 +790,13 @@
             }
         }
 
-        async function trackPlay(songTitle, poet, duration = null) {
-            if (!songTitle) return;
+        async function trackPlay(songTitle, poet, songId, duration = null) {
+            if (!songTitle || !telegramUser) return;
             
             const data = {
-                userId: userId,
+                userId: telegramUser.id.toString(),
                 songTitle: songTitle,
+                songId: songId || null,
                 poet: poet || 'Unknown',
                 timestamp: new Date().toISOString(),
                 duration: duration,
@@ -497,7 +807,7 @@
         }
 
         async function rateSong(type) {
-            if (!currentSong || !currentSong.title) return;
+            if (!currentSong || !currentSong.title || !telegramUser) return;
             
             const songTitle = currentSong.title;
             
@@ -506,8 +816,9 @@
             dislikeBtn.classList.remove('active');
             
             const data = {
-                userId: userId,
+                userId: telegramUser.id.toString(),
                 songTitle: songTitle,
+                songId: currentSong.id || null,
                 poet: currentSong.poet || 'Unknown',
                 rating: type, // 'like' or 'dislike'
                 timestamp: new Date().toISOString()
@@ -518,12 +829,10 @@
             if (result) {
                 if (type === 'like') {
                     likeBtn.classList.add('active');
-                    likeBtn.style.background = 'linear-gradient(45deg, #00a085, #4dd0b1)';
-                    dislikeBtn.style.background = 'linear-gradient(45deg, #e74c3c, #ff6b6b)';
+                    showToast('آهنگ پسندیده شد! 👍');
                 } else if (type === 'dislike') {
                     dislikeBtn.classList.add('active');
-                    dislikeBtn.style.background = 'linear-gradient(45deg, #c0392b, #e55656)';
-                    likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
+                    showToast('آهنگ نپسندیده شد! 👎');
                 }
                 
                 // Remove active state after animation
@@ -531,26 +840,204 @@
                     likeBtn.classList.remove('active');
                     dislikeBtn.classList.remove('active');
                 }, 1000);
+            } else {
+                showToast('خطا در ثبت نظر!', 'error');
+            }
+        }
+
+        async function togglePlaylistSong() {
+            if (!currentSong || !currentSong.title || !telegramUser) {
+                showToast('لطفاً ابتدا وارد شوید!', 'error');
+                return;
+            }
+
+            const songId = currentSong.id;
+            const isInPlaylist = userPlaylist.some(song => song.id === songId);
+
+            if (isInPlaylist) {
+                // Remove from playlist
+                const result = await sendToAPI('/remove-from-playlist', {
+                    userId: telegramUser.id.toString(),
+                    songId: songId
+                });
+
+                if (result && result.success) {
+                    userPlaylist = userPlaylist.filter(song => song.id !== songId);
+                    updatePlaylistButton();
+                    showToast('از پلی لیست حذف شد! 🗑️');
+                } else {
+                    showToast('خطا در حذف از پلی لیست!', 'error');
+                }
+            } else {
+                // Add to playlist
+                const data = {
+                    userId: telegramUser.id.toString(),
+                    songId: currentSong.id,
+                    songTitle: currentSong.title,
+                    poet: currentSong.poet || 'Unknown',
+                    url: currentSong.url,
+                    lyric: currentSong.lyric || '',
+                    timestamp: new Date().toISOString()
+                };
+
+                const result = await sendToAPI('/add-to-playlist', data);
+
+                if (result && result.success) {
+                    userPlaylist.push(currentSong);
+                    updatePlaylistButton();
+                    showToast('به پلی لیست اضافه شد! ➕');
+                } else {
+                    showToast('خطا در افزودن به پلی لیست!', 'error');
+                }
+            }
+        }
+
+        function updatePlaylistButton() {
+            if (!currentSong || !currentSong.id) return;
+
+            const isInPlaylist = userPlaylist.some(song => song.id === currentSong.id);
+            
+            if (isInPlaylist) {
+                playlistAddBtn.textContent = '✅ در پلی لیست';
+                playlistAddBtn.classList.add('added');
+                playlistAddBtn.title = 'حذف از پلی لیست';
+            } else {
+                playlistAddBtn.textContent = '➕ افزودن';
+                playlistAddBtn.classList.remove('added');
+                playlistAddBtn.title = 'افزودن به پلی لیست';
+            }
+        }
+
+        async function loadUserPlaylist() {
+            if (!telegramUser) return;
+
+            try {
+                const playlist = await fetchFromAPI(`/get-playlist?userId=${telegramUser.id}`);
+                userPlaylist = playlist || [];
+                updatePlaylistButton();
+            } catch (error) {
+                console.error('Error loading playlist:', error);
+                userPlaylist = [];
+            }
+        }
+
+        async function togglePlaylist() {
+            if (!telegramUser) {
+                showToast('لطفاً ابتدا وارد شوید!', 'error');
+                return;
+            }
+
+            const isOpen = playlistModal.classList.contains('show');
+            
+            if (isOpen) {
+                playlistModal.classList.remove('show');
+            } else {
+                playlistModal.classList.add('show');
+                await displayPlaylist();
+            }
+        }
+
+        async function displayPlaylist() {
+            const content = document.getElementById('playlistContent');
+            content.innerHTML = '<div class="loading">در حال بارگذاری...</div>';
+
+            try {
+                const playlist = await fetchFromAPI(`/get-playlist?userId=${telegramUser.id}`);
+                userPlaylist = playlist || [];
+
+                if (userPlaylist.length === 0) {
+                    content.innerHTML = `
+                        <div class="empty-playlist">
+                            <div class="icon">🎵</div>
+                            <h3>پلی لیست شما خالی است</h3>
+                            <p>آهنگ‌های مورد علاقه خود را اضافه کنید</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                content.innerHTML = userPlaylist.map(song => `
+                    <div class="playlist-item" onclick="playFromPlaylist('${song.id}')">
+                        <div>
+                            <h4>${song.title}</h4>
+                            <p>شاعر: ${song.poet || 'نامشخص'}</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="remove-btn" onclick="event.stopPropagation(); removeFromPlaylist('${song.id}')">حذف</button>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                content.innerHTML = `
+                    <div class="error">
+                        خطا در بارگذاری پلی لیست
+                    </div>
+                `;
+            }
+        }
+
+        async function playFromPlaylist(songId) {
+            const song = userPlaylist.find(s => s.id === songId);
+            if (!song) return;
+
+            // Close playlist modal
+            playlistModal.classList.remove('show');
+
+            // Set current song
+            currentSong = song;
+            audio.src = song.url;
+            
+            try {
+                await audio.play();
+                updateDisplay(song);
+                showToast(`در حال پخش: ${song.title} 🎵`);
+            } catch (error) {
+                console.error('Error playing song:', error);
+                showToast('خطا در پخش آهنگ!', 'error');
+            }
+        }
+
+        async function removeFromPlaylist(songId) {
+            if (!telegramUser) return;
+
+            const result = await sendToAPI('/remove-from-playlist', {
+                userId: telegramUser.id.toString(),
+                songId: songId
+            });
+
+            if (result && result.success) {
+                userPlaylist = userPlaylist.filter(song => song.id !== songId);
+                await displayPlaylist();
+                updatePlaylistButton();
+                showToast('از پلی لیست حذف شد! 🗑️');
+            } else {
+                showToast('خطا در حذف از پلی لیست!', 'error');
             }
         }
 
         async function updateRatingButtons() {
-            if (!currentSong || !currentSong.title) return;
+            if (!currentSong || !currentSong.title || !telegramUser) return;
             
-            const rating = await getSongRating(currentSong.title);
-            
-            // Reset button states
-            likeBtn.classList.remove('active');
-            dislikeBtn.classList.remove('active');
-            likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
-            dislikeBtn.style.background = 'linear-gradient(45deg, #e74c3c, #ff6b6b)';
-            
-            if (rating && rating.rating) {
-                if (rating.rating === 'like') {
-                    likeBtn.style.background = 'linear-gradient(45deg, #00a085, #4dd0b1)';
-                } else if (rating.rating === 'dislike') {
-                    dislikeBtn.style.background = 'linear-gradient(45deg, #c0392b, #e55656)';
+            try {
+                const rating = await fetchFromAPI(`/song-rating?title=${encodeURIComponent(currentSong.title)}&userId=${telegramUser.id}`);
+                
+                // Reset button states
+                likeBtn.classList.remove('active');
+                dislikeBtn.classList.remove('active');
+                
+                if (rating && rating.rating) {
+                    if (rating.rating === 'like') {
+                        likeBtn.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+                    } else if (rating.rating === 'dislike') {
+                        dislikeBtn.style.background = 'linear-gradient(45deg, #c0392b, #e55656)';
+                    }
+                } else {
+                    likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
+                    dislikeBtn.style.background = 'linear-gradient(45deg, #e74c3c, #ff6b6b)';
                 }
+            } catch (error) {
+                console.error('Error getting rating:', error);
             }
         }
 
@@ -638,11 +1125,12 @@
             // Hide click hint
             clickHintEl.style.display = 'none';
             
-            // Update rating buttons
+            // Update buttons
             await updateRatingButtons();
+            updatePlaylistButton();
             
             // Track play
-            await trackPlay(song.title, song.poet);
+            await trackPlay(song.title, song.poet, song.id);
         }
 
         function playNext() {
@@ -661,7 +1149,7 @@
 
         document.body.addEventListener('click', (e) => {
             // Don't trigger auto-play when clicking on buttons
-            if (e.target.closest('.rating-btn') || e.target.closest('.api-status')) {
+            if (e.target.closest('.action-btn') || e.target.closest('.api-status') || e.target.closest('.top-bar') || e.target.closest('.modal')) {
                 return;
             }
             
@@ -678,6 +1166,7 @@
             complete: function(results) {
                 const songs = results.data
                     .map(row => ({
+                        id: row.id?.trim() || Math.random().toString(36).substr(2, 9), // Use column E or generate ID
                         title: row.title?.trim(),
                         poet: row.poet?.trim(),
                         lyric: row.lyric?.trim(),
@@ -703,7 +1192,7 @@
                 startVisualEffects();
                 
                 audio.play().catch(e => {
-                    console.error('Initial playback failed:', e);
+                    console.error('Initial playbook failed:', e);
                     clickHintEl.style.display = 'block';
                 });
             },
@@ -717,13 +1206,28 @@
             }
         });
 
-        // Initialize background
-        changeBackground();
-        
-        // Test API connection on load
-        setTimeout(() => {
-            sendToAPI('/health', { test: true });
-        }, 1000);
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            initTelegram();
+            changeBackground();
+            
+            // Load user playlist after Telegram init
+            setTimeout(() => {
+                loadUserPlaylist();
+            }, 1000);
+            
+            // Test API connection
+            setTimeout(() => {
+                sendToAPI('/health', { test: true });
+            }, 2000);
+        });
+
+        // Close modal when clicking outside
+        playlistModal.addEventListener('click', (e) => {
+            if (e.target === playlistModal) {
+                togglePlaylist();
+            }
+        });
     </script>
 </body>
 </html>
