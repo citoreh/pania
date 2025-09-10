@@ -906,3 +906,239 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Skip functionality initialized');
 });
 
+// 1. getCurrentSongData() - Get current song information
+function getCurrentSongData() {
+    // Get current song data from your existing implementation
+    return {
+        id: window.currentSongId || window.currentSong?.id || generateTempId(),
+        title: document.getElementById('title').textContent.trim(),
+        poet: document.getElementById('poet').textContent.trim(),
+        lyrics: document.getElementById('lyrics').textContent.trim()
+    };
+}
+
+// Helper function to generate temporary ID if none exists
+function generateTempId() {
+    const title = document.getElementById('title').textContent.trim();
+    const poet = document.getElementById('poet').textContent.trim();
+    return btoa(title + poet).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
+}
+
+// 2. getRandomSong() - Adapt this to your existing API
+async function getRandomSong() {
+    try {
+        // Option A: If you have a specific API endpoint
+        const response = await fetch('/api/random-poem', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('API request failed');
+        }
+        
+        const songData = await response.json();
+        return songData;
+        
+    } catch (error) {
+        console.error('Error fetching random song:', error);
+        
+        // Option B: If you're using a different API pattern, replace the above with:
+        // For example, if you're using a different endpoint:
+        /*
+        try {
+            const response = await fetch('https://your-api-domain.com/get-poem');
+            const data = await response.json();
+            return {
+                id: data.poem_id || data.id,
+                title: data.poem_title || data.title,
+                poet: data.poet_name || data.poet,
+                lyrics: data.poem_text || data.lyrics || data.content,
+                audio: data.audio_url || data.audio
+            };
+        } catch (error) {
+            console.error('API Error:', error);
+        }
+        */
+        
+        // Option C: If you're loading from a local file/CSV
+        /*
+        if (window.poemDatabase && window.poemDatabase.length > 0) {
+            const randomIndex = Math.floor(Math.random() * window.poemDatabase.length);
+            const poem = window.poemDatabase[randomIndex];
+            return {
+                id: poem.id || randomIndex,
+                title: poem.title,
+                poet: poem.poet,
+                lyrics: poem.lyrics,
+                audio: poem.audio
+            };
+        }
+        */
+        
+        // Fallback: Return null to handle error gracefully
+        return null;
+    }
+}
+
+// 3. loadSong(song) - Adapt to your existing display logic
+async function loadSong(song) {
+    if (!song) {
+        showToast('خطا در بارگذاری شعر', 'error');
+        return;
+    }
+    
+    try {
+        // Store current song reference
+        window.currentSongId = song.id;
+        window.currentSong = song;
+        
+        // Update UI elements
+        const titleElement = document.getElementById('title');
+        const poetElement = document.getElementById('poet');
+        const lyricsElement = document.getElementById('lyrics');
+        const audioElement = document.getElementById('audio');
+        
+        // Remove loading states
+        titleElement.classList.remove('loading');
+        poetElement.classList.remove('loading');
+        lyricsElement.classList.remove('loading');
+        
+        // Update content
+        titleElement.textContent = song.title || 'بدون عنوان';
+        poetElement.textContent = song.poet || 'نامعلوم';
+        lyricsElement.textContent = song.lyrics || 'متن شعر در دسترس نیست';
+        
+        // Handle audio if available
+        if (song.audio && song.audio.trim() !== '') {
+            audioElement.src = song.audio;
+            audioElement.load();
+            
+            // If you have auto-play functionality, uncomment:
+            // audioElement.play().catch(e => console.log('Auto-play prevented'));
+        } else {
+            // Clear audio source if no audio available
+            audioElement.src = '';
+        }
+        
+        // Reset button states for new song
+        resetButtonStates();
+        
+        // Update playlist button state (check if already in playlist)
+        updatePlaylistButtonState(song.id);
+        
+        // Hide click hint if it was showing
+        const clickHint = document.getElementById('click-hint');
+        if (clickHint) {
+            clickHint.style.display = 'none';
+        }
+        
+        console.log('Song loaded successfully:', song.title);
+        
+    } catch (error) {
+        console.error('Error loading song:', error);
+        showToast('خطا در نمایش شعر', 'error');
+    }
+}
+
+// Helper function to reset button states
+function resetButtonStates() {
+    const likeBtn = document.getElementById('likeBtn');
+    const dislikeBtn = document.getElementById('dislikeBtn');
+    const playlistBtn = document.getElementById('playlistAddBtn');
+    
+    // Reset like button
+    likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
+    likeBtn.innerHTML = '👍 پسندیدم';
+    
+    // Reset dislike button  
+    dislikeBtn.innerHTML = '<span class="btn-text"><span class="skip-icon">⏭️</span><span>رد کردن</span></span>';
+    
+    // Reset playlist button
+    playlistBtn.classList.remove('added');
+    playlistBtn.innerHTML = '➕ افزودن';
+}
+
+// Helper function to update playlist button state
+function updatePlaylistButtonState(songId) {
+    const playlistBtn = document.getElementById('playlistAddBtn');
+    const playlist = JSON.parse(localStorage.getItem('userPlaylist') || '[]');
+    
+    const isInPlaylist = playlist.some(item => item.id === songId);
+    
+    if (isInPlaylist) {
+        playlistBtn.classList.add('added');
+        playlistBtn.innerHTML = '✅ اضافه شده';
+    }
+}
+
+// Enhanced loadNextSong function that respects blacklist
+async function loadNextSong() {
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    // Show loading state immediately
+    document.getElementById('lyrics').classList.add('loading');
+    document.getElementById('title').classList.add('loading');
+    document.getElementById('lyrics').textContent = 'در حال بارگذاری شعر بعدی...';
+    document.getElementById('title').textContent = 'در حال بارگذاری...';
+    
+    while (attempts < maxAttempts) {
+        const song = await getRandomSong();
+        
+        if (!song) {
+            showToast('خطا در دریافت شعر جدید', 'error');
+            return;
+        }
+        
+        if (!isSongBlacklisted(song.id)) {
+            await loadSong(song);
+            return;
+        }
+        
+        attempts++;
+    }
+    
+    // If all songs seem blacklisted
+    showToast('همه اشعار پیشنهادی قبلاً رد شده‌اند. در حال تازه‌سازی...', 'error');
+    const song = await getRandomSong();
+    if (song) {
+        await loadSong(song);
+    }
+}
+
+// Initialize your app when page loads
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Initializing Pania app with skip functionality...');
+    
+    // Load first song on app start
+    try {
+        const firstSong = await getRandomSong();
+        if (firstSong) {
+            await loadSong(firstSong);
+        } else {
+            showToast('خطا در بارگذاری اولیه', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading initial song:', error);
+        showToast('خطا در شروع برنامه', 'error');
+    }
+});
+
+// CONFIGURATION GUIDE:
+// ====================
+// 
+// 1. UPDATE getRandomSong() based on your API:
+//    - If you use a specific endpoint, update the fetch URL
+//    - If you use POST with parameters, change the method and add body
+//    - If you load from CSV/local data, use Option C pattern
+//
+// 2. VERIFY your API response format:
+//    - Make sure your API returns: {id, title, poet, lyrics, audio}
+//    - If field names are different, update the mapping
+//
+// 3. TEST with console.log:
+//    - Add console.log(song) in loadSong() to see your data structure
+//    - Add console.log(response) in getRandomSong() to debug API calls
