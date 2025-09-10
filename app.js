@@ -803,7 +803,7 @@ async function loadNextSong() {
 async function getRandomSong() {
     // This is just an example - replace with your actual API call
     try {
-        const response = await fetch('/api/random-song'); // Your API endpoint
+        const response = await fetch('https://api-o27g4vauhq-uc.a.run.app'); // Your API endpoint
         const song = await response.json();
         return song;
     } catch (error) {
