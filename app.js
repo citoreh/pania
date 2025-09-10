@@ -226,22 +226,72 @@ function updatePageTitle(songTitle) {
     }
 }
 
-// Music Functions
+// BLACKLIST FUNCTIONS
+function isSongBlacklisted(songId) {
+    const blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
+    return blacklist.includes(songId);
+}
+
+function addToBlacklist(songId) {
+    try {
+        let blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
+        if (!blacklist.includes(songId)) {
+            blacklist.push(songId);
+            localStorage.setItem('blacklistedSongs', JSON.stringify(blacklist));
+            console.log(`🚫 Song ${songId} added to blacklist`);
+        }
+    } catch (error) {
+        console.error('Error adding to blacklist:', error);
+    }
+}
+
+function showSkipOverlay() {
+    const overlay = document.getElementById('skipOverlay');
+    if (overlay) {
+        overlay.classList.add('show');
+        setTimeout(() => {
+            overlay.classList.remove('show');
+        }, 2000);
+    }
+}
+
+// ENHANCED MUSIC FUNCTIONS WITH SKIP
 async function rateSong(type) {
     if (!currentSong || !currentSong.title) {
         showToast('هیچ آهنگی در حال پخش نیست!', 'error');
         return;
     }
     
-    // Visual feedback
-    if (type === 'like') {
+    if (type === 'dislike') {
+        // SKIP FUNCTIONALITY
+        // 1. Add visual feedback
+        dislikeBtn.classList.add('btn-feedback');
+        
+        // 2. Show skip overlay
+        showSkipOverlay();
+        
+        // 3. Add to blacklist immediately
+        addToBlacklist(currentSong.id);
+        
+        // 4. Skip to next song
+        skipToNext();
+        
+        // 5. Show success message
+        showToast('شعر رد شد و دیگر پخش نخواهد شد!', 'success');
+        
+        // 6. Remove feedback animation
+        setTimeout(() => {
+            dislikeBtn.classList.remove('btn-feedback');
+        }, 600);
+        
+    } else if (type === 'like') {
+        // Visual feedback
         likeBtn.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+        likeBtn.innerHTML = '✅ پسندیدم';
         showToast('آهنگ پسندیده شد!', 'success');
-    } else {
-        dislikeBtn.style.background = 'linear-gradient(45deg, #c0392b, #e55656)';
-        showToast('آهنگ نپسندیده شد!', 'success');
     }
     
+    // Send rating to API
     const data = {
         userId: telegramUser.id.toString(),
         songTitle: currentSong.title,
@@ -254,6 +304,94 @@ async function rateSong(type) {
     const result = await sendToAPI('/rate-song', data);
     if (result) {
         console.log(`✅ Song ${type}d successfully`);
+    }
+}
+
+// ENHANCED SKIP FUNCTION
+function skipToNext() {
+    // Stop current audio
+    audio.pause();
+    audio.currentTime = 0;
+    
+    // Show loading state
+    titleEl.classList.add('loading');
+    lyricsEl.classList.add('loading');
+    titleEl.textContent = 'در حال بارگذاری...';
+    lyricsEl.textContent = 'در حال بارگذاری شعر بعدی...';
+    
+    // Find next non-blacklisted song
+    playNextNonBlacklisted();
+}
+
+// ENHANCED PLAY NEXT WITH BLACKLIST SUPPORT
+function playNextNonBlacklisted() {
+    let attempts = 0;
+    const maxAttempts = playlist.length;
+    
+    while (attempts < maxAttempts) {
+        if (isPlayingUserPlaylist) {
+            // Playing user's saved playlist
+            userPlaylistIndex = (userPlaylistIndex + 1) % userPlaylist.length;
+            const song = userPlaylist[userPlaylistIndex];
+            
+            if (!isSongBlacklisted(song.id)) {
+                audio.src = song.url;
+                audio.play().catch(e => {
+                    console.error('Playback error:', e);
+                    setTimeout(() => playNextNonBlacklisted(), 1000);
+                });
+                updateDisplay(song);
+                console.log(`⏭️ Playing next from user playlist: ${song.title}`);
+                return;
+            }
+        } else {
+            // Playing main shuffled playlist
+            currentIndex = (currentIndex + 1) % playlist.length;
+            const song = playlist[currentIndex];
+            
+            if (!isSongBlacklisted(song.id)) {
+                audio.src = song.url;
+                audio.play().catch(e => {
+                    console.error('Playback error:', e);
+                    setTimeout(() => playNextNonBlacklisted(), 1000);
+                });
+                updateDisplay(song);
+                console.log(`⏭️ Playing next song: ${song.title}`);
+                return;
+            }
+        }
+        attempts++;
+    }
+    
+    // If all songs are blacklisted, show message and play anyway
+    showToast('همه اشعار رد شده‌اند! پخش آخرین شعر...', 'error');
+    playNext(); // Use original function as fallback
+}
+
+// Original playNext function (fallback)
+function playNext() {
+    if (isPlayingUserPlaylist) {
+        // Playing user's saved playlist
+        userPlaylistIndex = (userPlaylistIndex + 1) % userPlaylist.length;
+        const song = userPlaylist[userPlaylistIndex];
+        audio.src = song.url;
+        audio.play().catch(e => {
+            console.error('Playback error:', e);
+            setTimeout(playNext, 1000);
+        });
+        updateDisplay(song);
+        console.log(`⏭️ Playing next from user playlist: ${song.title} (${userPlaylistIndex + 1}/${userPlaylist.length})`);
+    } else {
+        // Playing main shuffled playlist
+        currentIndex = (currentIndex + 1) % playlist.length;
+        const song = playlist[currentIndex];
+        audio.src = song.url;
+        audio.play().catch(e => {
+            console.error('Playback error:', e);
+            setTimeout(playNext, 1000);
+        });
+        updateDisplay(song);
+        console.log(`⏭️ Playing next song: ${song.title} (${currentIndex + 1}/${playlist.length})`);
     }
 }
 
@@ -338,37 +476,22 @@ function updateDisplay(song) {
     titleEl.classList.remove('loading');
     lyricsEl.classList.remove('loading');
     
+    // Reset button states
+    resetButtonStates();
+    
     // Update playlist button
     updatePlaylistButton();
     
     console.log(`🎵 Display updated: ${song.title} (ID: ${song.id || 'NO ID'})`);
 }
 
-// Enhanced playNext with playlist support
-function playNext() {
-    if (isPlayingUserPlaylist) {
-        // Playing user's saved playlist
-        userPlaylistIndex = (userPlaylistIndex + 1) % userPlaylist.length;
-        const song = userPlaylist[userPlaylistIndex];
-        audio.src = song.url;
-        audio.play().catch(e => {
-            console.error('Playback error:', e);
-            setTimeout(playNext, 1000);
-        });
-        updateDisplay(song);
-        console.log(`⏭️ Playing next from user playlist: ${song.title} (${userPlaylistIndex + 1}/${userPlaylist.length})`);
-    } else {
-        // Playing main shuffled playlist
-        currentIndex = (currentIndex + 1) % playlist.length;
-        const song = playlist[currentIndex];
-        audio.src = song.url;
-        audio.play().catch(e => {
-            console.error('Playback error:', e);
-            setTimeout(playNext, 1000);
-        });
-        updateDisplay(song);
-        console.log(`⏭️ Playing next song: ${song.title} (${currentIndex + 1}/${playlist.length})`);
-    }
+function resetButtonStates() {
+    // Reset like button
+    likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
+    likeBtn.innerHTML = '👍 پسندیدم';
+    
+    // Reset dislike button
+    dislikeBtn.innerHTML = '<span class="btn-text"><span class="skip-icon">⏭️</span><span>رد کردن</span></span>';
 }
 
 // Playlist Management Functions
@@ -456,7 +579,7 @@ async function displayPlaylist() {
     }
 }
 
-// NEW: Play all playlist functionality
+// Play all playlist functionality
 async function playAllPlaylist() {
     if (userPlaylist.length === 0) {
         showToast('پلی لیست خالی است!', 'error');
@@ -537,7 +660,7 @@ async function removeFromPlaylist(songId) {
 }
 
 // Event listeners
-audio.addEventListener('ended', playNext);
+audio.addEventListener('ended', playNextNonBlacklisted); // Use blacklist-aware function
 
 // Click to play (handle autoplay restrictions)
 document.body.addEventListener('click', (e) => {
@@ -558,6 +681,20 @@ document.body.addEventListener('click', (e) => {
 playlistModal.addEventListener('click', (e) => {
     if (e.target === playlistModal) {
         togglePlaylist();
+    }
+});
+
+// KEYBOARD SHORTCUTS
+document.addEventListener('keydown', function(e) {
+    // Skip with right arrow, 's' key, or spacebar
+    if (e.key === 'ArrowRight' || e.key === 's' || e.key === ' ') {
+        e.preventDefault();
+        rateSong('dislike');
+    }
+    // Like with left arrow or 'l' key  
+    else if (e.key === 'ArrowLeft' || e.key === 'l') {
+        e.preventDefault();
+        rateSong('like');
     }
 });
 
@@ -616,8 +753,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Use intelligent shuffle to prevent consecutive same titles
             playlist = intelligentShuffle(songs);
             
-            // Start with first song from shuffled playlist
-            currentIndex = 0;
+            // Start with first NON-BLACKLISTED song
+            let startIndex = 0;
+            while (startIndex < playlist.length && isSongBlacklisted(playlist[startIndex].id)) {
+                startIndex++;
+            }
+            
+            if (startIndex >= playlist.length) {
+                console.log('⚠️ All songs are blacklisted, starting with first song anyway');
+                startIndex = 0;
+            }
+            
+            currentIndex = startIndex;
             const firstSong = playlist[currentIndex];
             audio.src = firstSong.url;
             updateDisplay(firstSong);
@@ -628,7 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clickHintEl.style.display = 'block';
             });
             
-            console.log(`✅ Player initialized with ${playlist.length} songs`);
+            console.log(`✅ Player initialized with ${playlist.length} songs (started at index ${startIndex})`);
         },
         error: function(error) {
             console.error('❌ CSV loading failed:', error);
@@ -638,668 +785,4 @@ document.addEventListener('DOMContentLoaded', () => {
             lyricsEl.classList.remove('loading');
         }
     });
-});
-// Enhanced rateSong function with skip functionality
-async function rateSong(rating) {
-    const currentSong = getCurrentSongData(); // You'll need to implement this based on your current song tracking
-    
-    try {
-        if (rating === 'dislike') {
-            // 1. Add visual feedback immediately
-            const dislikeBtn = document.getElementById('dislikeBtn');
-            dislikeBtn.classList.add('btn-feedback');
-            
-            // 2. Show skip overlay
-            showSkipOverlay();
-            
-            // 3. Immediately skip to next song
-            await skipToNextSong();
-            
-            // 4. Add to blacklist
-            await addToBlacklist(currentSong.id);
-            
-            // 5. Record the dislike rating (optional)
-            await recordRating(currentSong.id, 'dislike');
-            
-            // 6. Show success message
-            showToast('شعر رد شد و دیگر پخش نخواهد شد', 'success');
-            
-            // 7. Remove feedback animation
-            setTimeout(() => {
-                dislikeBtn.classList.remove('btn-feedback');
-            }, 600);
-            
-        } else if (rating === 'like') {
-            // Handle like as before
-            await recordRating(currentSong.id, 'like');
-            showToast('شعر به لیست مورد علاقه‌های شما اضافه شد!', 'success');
-            
-            // Update UI
-            const likeBtn = document.getElementById('likeBtn');
-            likeBtn.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
-            likeBtn.innerHTML = '✅ پسندیدم';
-        }
-        
-    } catch (error) {
-        console.error('Rating error:', error);
-        showToast('خطا در عملیات', 'error');
-    }
-}
-
-// Get current song data - you'll need to adapt this to your current implementation
-function getCurrentSongData() {
-    // This should return the current song object with at least an 'id' property
-    // Example implementation:
-    return {
-        id: window.currentSongId || Date.now(), // Use your actual song ID
-        title: document.getElementById('title').textContent,
-        poet: document.getElementById('poet').textContent
-    };
-}
-
-// Skip to next song immediately
-async function skipToNextSong() {
-    const audio = document.getElementById('audio');
-    
-    // Stop current audio
-    audio.pause();
-    audio.currentTime = 0;
-    
-    // Show loading state
-    document.getElementById('lyrics').classList.add('loading');
-    document.getElementById('title').classList.add('loading');
-    document.getElementById('lyrics').textContent = 'در حال بارگذاری شعر بعدی...';
-    document.getElementById('title').textContent = 'در حال بارگذاری...';
-    
-    // Load next song - adapt this to your existing function
-    try {
-        await loadNextSong(); // You'll need to implement this or adapt your existing function
-    } catch (error) {
-        console.error('Error loading next song:', error);
-        showToast('خطا در بارگذاری شعر بعدی', 'error');
-    }
-}
-
-// Add song to user's permanent blacklist
-async function addToBlacklist(songId) {
-    try {
-        // Store in local storage for immediate effect
-        let blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
-        if (!blacklist.includes(songId)) {
-            blacklist.push(songId);
-            localStorage.setItem('blacklistedSongs', JSON.stringify(blacklist));
-        }
-        
-        // Also send to server if you have an API endpoint
-        // Uncomment and adapt this if you have a server API:
-        /*
-        const response = await fetch('/api/blacklist', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                userId: getUserId(), // Implement this function
-                songId: songId,
-                action: 'add'
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to update server blacklist');
-        }
-        */
-        
-    } catch (error) {
-        console.error('Error adding to blacklist:', error);
-        // Even if server fails, local storage will work
-    }
-}
-
-// Check if song is blacklisted before playing
-function isSongBlacklisted(songId) {
-    const blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
-    return blacklist.includes(songId);
-}
-
-// Show skip overlay
-function showSkipOverlay() {
-    const overlay = document.getElementById('skipOverlay');
-    overlay.classList.add('show');
-    
-    // Hide after 2 seconds
-    setTimeout(() => {
-        overlay.classList.remove('show');
-    }, 2000);
-}
-
-// Enhanced loadNextSong function that respects blacklist
-async function loadNextSong() {
-    let attempts = 0;
-    const maxAttempts = 10; // Prevent infinite loop
-    
-    while (attempts < maxAttempts) {
-        // Get a random song using your existing method
-        const song = await getRandomSong(); // You'll need to implement this or use your existing function
-        
-        if (!isSongBlacklisted(song.id)) {
-            // Load this song
-            await loadSong(song); // You'll need to implement this or use your existing function
-            return;
-        }
-        
-        attempts++;
-    }
-    
-    // If all songs seem blacklisted, show message and load anyway
-    showToast('همه اشعار پیشنهادی قبلاً رد شده‌اند', 'error');
-    const song = await getRandomSong();
-    await loadSong(song);
-}
-
-// Example implementations you'll need to adapt to your existing code:
-
-// Get random song - adapt this to your API
-async function getRandomSong() {
-    // This is just an example - replace with your actual API call
-    try {
-        const response = await fetch('https://api-o27g4vauhq-uc.a.run.app'); // Your API endpoint
-        const song = await response.json();
-        return song;
-    } catch (error) {
-        console.error('Error fetching random song:', error);
-        // Return a dummy song for testing
-        return {
-            id: Date.now(),
-            title: 'شعر تست',
-            poet: 'شاعر تست',
-            lyrics: 'این یک شعر تست است...',
-            audio: ''
-        };
-    }
-}
-
-// Load song - adapt this to your existing implementation
-async function loadSong(song) {
-    // Update UI
-    document.getElementById('title').textContent = song.title;
-    document.getElementById('poet').textContent = song.poet;
-    document.getElementById('lyrics').textContent = song.lyrics;
-    
-    // Store current song ID for blacklisting
-    window.currentSongId = song.id;
-    
-    // Load audio if available
-    const audio = document.getElementById('audio');
-    if (song.audio) {
-        audio.src = song.audio;
-        audio.load();
-    }
-    
-    // Remove loading state
-    document.getElementById('lyrics').classList.remove('loading');
-    document.getElementById('title').classList.remove('loading');
-    
-    // Reset buttons
-    resetButtonStates();
-}
-
-// Reset button states when loading new song
-function resetButtonStates() {
-    const likeBtn = document.getElementById('likeBtn');
-    const dislikeBtn = document.getElementById('dislikeBtn');
-    const playlistBtn = document.getElementById('playlistAddBtn');
-    
-    // Reset like button
-    likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
-    likeBtn.innerHTML = '👍 پسندیدم';
-    
-    // Reset playlist button
-    playlistBtn.classList.remove('added');
-    playlistBtn.innerHTML = '➕ افزودن';
-}
-
-// Show toast message
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    toast.classList.add('show');
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
-
-// Record rating (optional - adapt to your API)
-async function recordRating(songId, rating) {
-    try {
-        // Store locally
-        let ratings = JSON.parse(localStorage.getItem('songRatings') || '{}');
-        ratings[songId] = rating;
-        localStorage.setItem('songRatings', JSON.stringify(ratings));
-        
-        // Send to server if you have an API
-        // await fetch('/api/rate', { ... });
-        
-    } catch (error) {
-        console.error('Error recording rating:', error);
-    }
-}
-
-// Initialize enhanced functionality when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    // Add keyboard shortcuts for better UX
-    document.addEventListener('keydown', function(e) {
-        // Skip with right arrow, 's' key, or spacebar
-        if (e.key === 'ArrowRight' || e.key === 's' || e.key === ' ') {
-            e.preventDefault();
-            rateSong('dislike');
-        }
-        // Like with left arrow or 'l' key  
-        else if (e.key === 'ArrowLeft' || e.key === 'l') {
-            e.preventDefault();
-            rateSong('like');
-        }
-    });
-    
-    console.log('Skip functionality initialized');
-});
-
-// Complete app.js code for Pania player with skip functionality
-
-// 1. getCurrentSongData() - Get current song information
-function getCurrentSongData() {
-    return {
-        id: window.currentSongId || window.currentSong?.id || generateTempId(),
-        title: document.getElementById('title').textContent.trim(),
-        poet: document.getElementById('poet').textContent.trim(),
-        lyrics: document.getElementById('lyrics').textContent.trim()
-    };
-}
-
-// Helper function to generate temporary ID if none exists
-function generateTempId() {
-    const title = document.getElementById('title').textContent.trim();
-    const poet = document.getElementById('poet').textContent.trim();
-    return btoa(title + poet).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
-}
-
-// 2. getRandomSong() - Using your API
-async function getRandomSong() {
-    try {
-        const response = await fetch('https://api-o27g4vauhq-uc.a.run.app', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Log the response to see the structure (you can remove this later)
-        console.log('API Response:', data);
-        
-        // Map your API response to the expected format
-        // UPDATE THESE FIELD NAMES based on what your API returns:
-        return {
-            id: data.id || data.poem_id || Date.now(),
-            title: data.title || data.poem_title || 'بدون عنوان',
-            poet: data.poet || data.author || data.poet_name || 'نامعلوم',
-            lyrics: data.lyrics || data.content || data.poem_text || data.text || 'متن در دسترس نیست',
-            audio: data.audio || data.audio_url || ''
-        };
-        
-    } catch (error) {
-        console.error('Error fetching random song:', error);
-        return null;
-    }
-}
-
-// 3. loadSong(song) - Display the song
-async function loadSong(song) {
-    if (!song) {
-        showToast('خطا در بارگذاری شعر', 'error');
-        return;
-    }
-    
-    try {
-        // Store current song reference
-        window.currentSongId = song.id;
-        window.currentSong = song;
-        
-        // Update UI elements
-        const titleElement = document.getElementById('title');
-        const poetElement = document.getElementById('poet');
-        const lyricsElement = document.getElementById('lyrics');
-        const audioElement = document.getElementById('audio');
-        
-        // Remove loading states
-        titleElement.classList.remove('loading');
-        poetElement.classList.remove('loading');
-        lyricsElement.classList.remove('loading');
-        
-        // Update content
-        titleElement.textContent = song.title;
-        poetElement.textContent = song.poet;
-        lyricsElement.textContent = song.lyrics;
-        
-        // Handle audio if available
-        if (song.audio && song.audio.trim() !== '') {
-            audioElement.src = song.audio;
-            audioElement.load();
-        } else {
-            audioElement.src = '';
-        }
-        
-        // Reset button states for new song
-        resetButtonStates();
-        
-        // Update playlist button state
-        updatePlaylistButtonState(song.id);
-        
-        // Hide click hint if showing
-        const clickHint = document.getElementById('click-hint');
-        if (clickHint) {
-            clickHint.style.display = 'none';
-        }
-        
-        console.log('Song loaded successfully:', song.title);
-        
-    } catch (error) {
-        console.error('Error loading song:', error);
-        showToast('خطا در نمایش شعر', 'error');
-    }
-}
-
-// Enhanced rateSong function with skip functionality
-async function rateSong(rating) {
-    const currentSong = getCurrentSongData();
-    
-    try {
-        if (rating === 'dislike') {
-            // 1. Add visual feedback immediately
-            const dislikeBtn = document.getElementById('dislikeBtn');
-            dislikeBtn.classList.add('btn-feedback');
-            
-            // 2. Show skip overlay
-            showSkipOverlay();
-            
-            // 3. Immediately skip to next song
-            await skipToNextSong();
-            
-            // 4. Add to blacklist
-            await addToBlacklist(currentSong.id);
-            
-            // 5. Show success message
-            showToast('شعر رد شد و دیگر پخش نخواهد شد', 'success');
-            
-            // 6. Remove feedback animation
-            setTimeout(() => {
-                dislikeBtn.classList.remove('btn-feedback');
-            }, 600);
-            
-        } else if (rating === 'like') {
-            // Handle like
-            await recordRating(currentSong.id, 'like');
-            showToast('شعر به لیست مورد علاقه‌های شما اضافه شد!', 'success');
-            
-            // Update UI
-            const likeBtn = document.getElementById('likeBtn');
-            likeBtn.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
-            likeBtn.innerHTML = '✅ پسندیدم';
-        }
-        
-    } catch (error) {
-        console.error('Rating error:', error);
-        showToast('خطا در عملیات', 'error');
-    }
-}
-
-// Skip to next song immediately
-async function skipToNextSong() {
-    const audio = document.getElementById('audio');
-    
-    // Stop current audio
-    audio.pause();
-    audio.currentTime = 0;
-    
-    // Show loading state
-    document.getElementById('lyrics').classList.add('loading');
-    document.getElementById('title').classList.add('loading');
-    document.getElementById('lyrics').textContent = 'در حال بارگذاری شعر بعدی...';
-    document.getElementById('title').textContent = 'در حال بارگذاری...';
-    
-    // Load next song
-    try {
-        await loadNextSong();
-    } catch (error) {
-        console.error('Error loading next song:', error);
-        showToast('خطا در بارگذاری شعر بعدی', 'error');
-    }
-}
-
-// Enhanced loadNextSong function that respects blacklist
-async function loadNextSong() {
-    let attempts = 0;
-    const maxAttempts = 10;
-    
-    while (attempts < maxAttempts) {
-        const song = await getRandomSong();
-        
-        if (!song) {
-            showToast('خطا در دریافت شعر جدید', 'error');
-            return;
-        }
-        
-        if (!isSongBlacklisted(song.id)) {
-            await loadSong(song);
-            return;
-        }
-        
-        attempts++;
-    }
-    
-    // If all songs seem blacklisted
-    showToast('همه اشعار پیشنهادی قبلاً رد شده‌اند. در حال تازه‌سازی...', 'error');
-    const song = await getRandomSong();
-    if (song) {
-        await loadSong(song);
-    }
-}
-
-// Add song to user's permanent blacklist
-async function addToBlacklist(songId) {
-    try {
-        let blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
-        if (!blacklist.includes(songId)) {
-            blacklist.push(songId);
-            localStorage.setItem('blacklistedSongs', JSON.stringify(blacklist));
-        }
-    } catch (error) {
-        console.error('Error adding to blacklist:', error);
-    }
-}
-
-// Check if song is blacklisted
-function isSongBlacklisted(songId) {
-    const blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
-    return blacklist.includes(songId);
-}
-
-// Show skip overlay
-function showSkipOverlay() {
-    const overlay = document.getElementById('skipOverlay');
-    overlay.classList.add('show');
-    
-    setTimeout(() => {
-        overlay.classList.remove('show');
-    }, 2000);
-}
-
-// Show toast message
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    toast.classList.add('show');
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
-
-// Reset button states
-function resetButtonStates() {
-    const likeBtn = document.getElementById('likeBtn');
-    const dislikeBtn = document.getElementById('dislikeBtn');
-    const playlistBtn = document.getElementById('playlistAddBtn');
-    
-    // Reset like button
-    likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
-    likeBtn.innerHTML = '👍 پسندیدم';
-    
-    // Reset dislike button  
-    dislikeBtn.innerHTML = '<span class="btn-text"><span class="skip-icon">⏭️</span><span>رد کردن</span></span>';
-    
-    // Reset playlist button
-    playlistBtn.classList.remove('added');
-    playlistBtn.innerHTML = '➕ افزودن';
-}
-
-// Update playlist button state
-function updatePlaylistButtonState(songId) {
-    const playlistBtn = document.getElementById('playlistAddBtn');
-    const playlist = JSON.parse(localStorage.getItem('userPlaylist') || '[]');
-    
-    const isInPlaylist = playlist.some(item => item.id === songId);
-    
-    if (isInPlaylist) {
-        playlistBtn.classList.add('added');
-        playlistBtn.innerHTML = '✅ اضافه شده';
-    }
-}
-
-// Record rating
-async function recordRating(songId, rating) {
-    try {
-        let ratings = JSON.parse(localStorage.getItem('songRatings') || '{}');
-        ratings[songId] = rating;
-        localStorage.setItem('songRatings', JSON.stringify(ratings));
-    } catch (error) {
-        console.error('Error recording rating:', error);
-    }
-}
-
-// Playlist functionality (if you don't have this already)
-function togglePlaylistSong() {
-    const currentSong = getCurrentSongData();
-    let playlist = JSON.parse(localStorage.getItem('userPlaylist') || '[]');
-    const playlistBtn = document.getElementById('playlistAddBtn');
-    
-    const existingIndex = playlist.findIndex(item => item.id === currentSong.id);
-    
-    if (existingIndex > -1) {
-        // Remove from playlist
-        playlist.splice(existingIndex, 1);
-        playlistBtn.classList.remove('added');
-        playlistBtn.innerHTML = '➕ افزودن';
-        showToast('از پلی لیست حذف شد', 'success');
-    } else {
-        // Add to playlist
-        playlist.push(currentSong);
-        playlistBtn.classList.add('added');
-        playlistBtn.innerHTML = '✅ اضافه شده';
-        showToast('به پلی لیست اضافه شد', 'success');
-    }
-    
-    localStorage.setItem('userPlaylist', JSON.stringify(playlist));
-}
-
-// Playlist modal functionality (if you don't have this already)
-function togglePlaylist() {
-    const modal = document.getElementById('playlistModal');
-    modal.classList.toggle('show');
-    
-    if (modal.classList.contains('show')) {
-        loadPlaylistContent();
-    }
-}
-
-function loadPlaylistContent() {
-    const playlist = JSON.parse(localStorage.getItem('userPlaylist') || '[]');
-    const content = document.getElementById('playlistContent');
-    
-    if (playlist.length === 0) {
-        content.innerHTML = '<div class="empty-playlist"><div class="icon">🎵</div><p>پلی لیست شما خالی است</p></div>';
-        return;
-    }
-    
-    let html = '<button class="play-all-btn" onclick="playAllPlaylist()">▶️ پخش همه</button>';
-    
-    playlist.forEach((song, index) => {
-        html += `
-            <div class="playlist-item">
-                <div class="playlist-item-info">
-                    <h4>${song.title}</h4>
-                    <p>${song.poet}</p>
-                </div>
-                <div class="playlist-item-actions">
-                    <button class="play-btn" onclick="playSongFromPlaylist(${index})">▶️</button>
-                    <button class="remove-btn" onclick="removeFromPlaylist(${index})">🗑️</button>
-                </div>
-            </div>
-        `;
-    });
-    
-    content.innerHTML = html;
-}
-
-function playSongFromPlaylist(index) {
-    const playlist = JSON.parse(localStorage.getItem('userPlaylist') || '[]');
-    if (playlist[index]) {
-        loadSong(playlist[index]);
-        togglePlaylist(); // Close modal
-    }
-}
-
-function removeFromPlaylist(index) {
-    let playlist = JSON.parse(localStorage.getItem('userPlaylist') || '[]');
-    playlist.splice(index, 1);
-    localStorage.setItem('userPlaylist', JSON.stringify(playlist));
-    loadPlaylistContent(); // Refresh the list
-    showToast('از پلی لیست حذف شد', 'success');
-}
-
-// Initialize app when page loads
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log('Initializing Pania app with skip functionality...');
-    
-    // Add keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowRight' || e.key === 's' || e.key === ' ') {
-            e.preventDefault();
-            rateSong('dislike');
-        } else if (e.key === 'ArrowLeft' || e.key === 'l') {
-            e.preventDefault();
-            rateSong('like');
-        }
-    });
-    
-    // Load first song
-    try {
-        const firstSong = await getRandomSong();
-        if (firstSong) {
-            await loadSong(firstSong);
-        } else {
-            showToast('خطا در بارگذاری اولیه', 'error');
-        }
-    } catch (error) {
-        console.error('Error loading initial song:', error);
-        showToast('خطا در شروع برنامه', 'error');
-    }
 });
