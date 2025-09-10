@@ -1,43 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="fa" dir="rtl">
 <head>
+    <meta charset="UTF-8">
+    <title>Pania Music Player - Minimal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <div id="result">Testing CSV load...</div>
+    <h1 id="title">Loading...</h1>
+    <h2 id="poet"></h2>
+    <div id="lyrics">Loading lyrics...</div>
+    <audio id="audio" controls></audio>
+    
     <script>
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QP9XuvvqLrbzaQ0rV9WfSVHYOBKQgJZUTzTQeSpzyUSQbSxIkJUlPFc67K8k2aIDuB5mcPrjHMU/pub?output=csv';
-        
-        console.log('Starting Papa Parse...');
-        document.getElementById('result').innerHTML = 'Papa Parse starting...';
         
         Papa.parse(csvUrl, {
             download: true,
             header: true,
             complete: function(results) {
-                console.log('Papa Parse completed:', results);
-                document.getElementById('result').innerHTML = `
-                    SUCCESS!<br>
-                    Rows: ${results.data.length}<br>
-                    Columns: ${results.meta.fields?.join(', ') || 'No headers'}<br>
-                    First title: ${results.data[0]?.title || 'No title found'}
-                `;
-            },
-            error: function(error) {
-                console.error('Papa Parse error:', error);
-                document.getElementById('result').innerHTML = `Papa Parse ERROR: ${error.message}`;
-            },
-            beforeFirstChunk: function(chunk) {
-                console.log('First chunk received:', chunk.substring(0, 100));
-                document.getElementById('result').innerHTML = 'CSV download started...';
+                const songs = results.data.filter(row => row.url && row.title);
+                const firstSong = songs[0];
+                
+                document.getElementById('title').textContent = firstSong.title;
+                document.getElementById('poet').textContent = firstSong.poet;
+                document.getElementById('lyrics').textContent = firstSong.lyric;
+                document.getElementById('audio').src = firstSong.url;
             }
         });
-        
-        setTimeout(() => {
-            if (document.getElementById('result').innerHTML.includes('Testing') || document.getElementById('result').innerHTML.includes('starting')) {
-                document.getElementById('result').innerHTML = 'TIMEOUT: Papa Parse did not respond after 10 seconds';
-            }
-        }, 10000);
     </script>
 </body>
 </html>
