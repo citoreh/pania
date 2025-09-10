@@ -3,9 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pania Music Admin Dashboard</title>
+    <title>🎵 Pania Music Admin Dashboard V5 - NEW VERSION</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        .version-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #e74c3c;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            z-index: 9999;
+            font-size: 1.1rem;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -17,6 +31,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
+            padding-top: 50px; /* Space for version banner */
         }
 
         .container {
@@ -32,6 +47,7 @@
             padding: 20px 30px;
             margin-bottom: 30px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 3px solid #ffd93d;
         }
 
         .header h1 {
@@ -39,6 +55,23 @@
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 10px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         .header p {
@@ -61,11 +94,18 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             text-align: center;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            border-color: #ffd93d;
+        }
+
+        .stat-card.new-feature {
+            border: 2px solid #e74c3c;
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(255, 255, 255, 0.95));
         }
 
         .stat-card .icon {
@@ -101,6 +141,10 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
+        .panel.new-feature {
+            border: 2px solid #e74c3c;
+        }
+
         .panel h2 {
             color: #2d3748;
             font-size: 1.5rem;
@@ -108,6 +152,11 @@
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 2px solid #e2e8f0;
+        }
+
+        .panel h2.new {
+            color: #e74c3c;
+            border-bottom-color: #e74c3c;
         }
 
         .song-item {
@@ -136,17 +185,23 @@
 
         .song-stats {
             text-align: right;
+            display: flex;
+            gap: 15px;
+        }
+
+        .song-stats .metric {
+            text-align: center;
         }
 
         .song-stats .count {
             color: #667eea;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 700;
         }
 
         .song-stats .label {
             color: #a0aec0;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
         }
 
         .rating-item {
@@ -226,16 +281,19 @@
             border-radius: 20px;
             font-size: 0.9rem;
             font-weight: 500;
+            border: 2px solid;
         }
 
         .api-status.online {
             background: #c6f6d5;
             color: #2f855a;
+            border-color: #2f855a;
         }
 
         .api-status.offline {
             background: #fed7d7;
             color: #c53030;
+            border-color: #c53030;
         }
 
         .loading {
@@ -276,6 +334,109 @@
             font-size: 0.9rem;
         }
 
+        /* New V5 Styles */
+        .playlist-stat {
+            border-left: 4px solid #9b59b6;
+            padding-left: 15px;
+        }
+
+        .engagement-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+        }
+
+        .metric-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .metric-card .description {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #718096;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: #e74c3c;
+            border-bottom-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .tab-btn:hover {
+            color: #e74c3c;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .playlist-user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .user-id {
+            font-family: monospace;
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .new-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -294,6 +455,15 @@
             .stats-grid {
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             }
+
+            .song-stats {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .engagement-metrics {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* Animations */
@@ -306,23 +476,28 @@
             animation: fadeIn 0.5s ease-out;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
         .pulse {
             animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Full width panels */
+        .full-width-panel {
+            grid-column: 1 / -1;
         }
     </style>
 </head>
 <body>
+    <!-- VERSION BANNER - CLEAR INDICATOR -->
+    <div class="version-banner">
+        🎵 PANIA MUSIC ADMIN DASHBOARD V5 - نسخه جدید با آمار پلی لیست - اگر این بنر را می‌بینید، نسخه جدید لود شده است! 📊
+    </div>
+
     <div class="container">
         <div class="header fade-in">
             <div class="controls">
                 <div>
-                    <h1>🎵 Pania Music Analytics</h1>
-                    <p>Real-time statistics and insights for your music platform</p>
+                    <h1>🎵 Pania Music Analytics <span class="version-badge">V5 NEW!</span></h1>
+                    <p>Complete music platform analytics with playlist insights & enhanced features</p>
                 </div>
                 <div style="display: flex; gap: 15px; align-items: center;">
                     <div class="api-status offline" id="apiStatus">
@@ -354,10 +529,38 @@
                 <div class="number pulse" id="totalDislikes">-</div>
                 <div class="label">Total Dislikes</div>
             </div>
+            <div class="stat-card fade-in new-feature">
+                <div class="icon">📋</div>
+                <div class="number pulse" id="totalPlaylistEntries">-</div>
+                <div class="label">Playlist Entries <span class="new-badge">NEW</span></div>
+            </div>
             <div class="stat-card fade-in">
                 <div class="icon">👥</div>
                 <div class="number pulse" id="uniqueUsers">-</div>
                 <div class="label">Unique Users</div>
+            </div>
+        </div>
+
+        <!-- NEW V5: Engagement Metrics -->
+        <div class="panel fade-in full-width-panel new-feature">
+            <h2 class="new">📈 User Engagement Metrics <span class="new-badge">V5 NEW!</span></h2>
+            <div class="engagement-metrics" id="engagementMetrics">
+                <div class="metric-card">
+                    <div class="value pulse" id="avgPlaylistSize">-</div>
+                    <div class="description">Average Playlist Size</div>
+                </div>
+                <div class="metric-card">
+                    <div class="value pulse" id="engagementRate">-</div>
+                    <div class="description">Engagement Rate %</div>
+                </div>
+                <div class="metric-card">
+                    <div class="value pulse" id="playlistConversion">-</div>
+                    <div class="description">Playlist Conversion %</div>
+                </div>
+                <div class="metric-card">
+                    <div class="value pulse" id="activeUsers">-</div>
+                    <div class="description">Active Users (24h)</div>
+                </div>
             </div>
         </div>
 
@@ -377,8 +580,37 @@
             </div>
         </div>
 
-        <div class="panel fade-in">
-            <h2>📊 Detailed Song Analytics</h2>
+        <!-- NEW V5: Playlist Analytics -->
+        <div class="panel fade-in full-width-panel new-feature">
+            <h2 class="new">📋 Playlist Analytics <span class="new-badge">V5 NEW!</span></h2>
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="switchTab('popular-songs')">Most Added Songs</button>
+                <button class="tab-btn" onclick="switchTab('top-users')">Top Playlist Users</button>
+                <button class="tab-btn" onclick="switchTab('playlist-trends')">Trends & Stats</button>
+            </div>
+            
+            <div id="popular-songs" class="tab-content active">
+                <div id="popularPlaylistSongs">
+                    <div class="loading pulse">Loading popular playlist songs...</div>
+                </div>
+            </div>
+            
+            <div id="top-users" class="tab-content">
+                <div id="topPlaylistUsers">
+                    <div class="loading pulse">Loading top users...</div>
+                </div>
+            </div>
+            
+            <div id="playlist-trends" class="tab-content">
+                <div id="playlistTrends">
+                    <div class="loading pulse">Loading playlist trends...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Detailed Analytics -->
+        <div class="panel fade-in full-width-panel">
+            <h2>📊 Enhanced Song Analytics <span class="new-badge">ENHANCED!</span></h2>
             <div id="detailedAnalytics">
                 <div class="loading pulse">Loading detailed analytics...</div>
             </div>
@@ -386,10 +618,16 @@
     </div>
 
     <script>
-        // Configuration - Update this URL after Firebase deployment
-        const API_BASE_URL = 'https://api-o27g4vauhq-uc.a.run.app'; // Replace 'pania-music' with your Firebase project ID
+        // Configuration - UPDATED WITH YOUR FIREBASE URL
+        const API_BASE_URL = 'https://api-o27g4vauhq-uc.a.run.app';
         
         let lastUpdateTime = null;
+
+        // Show clear indicators this is V5
+        setTimeout(() => {
+            document.querySelector('.header').style.border = '3px solid #e74c3c';
+            console.log('🎵 PANIA MUSIC ADMIN V5 LOADED SUCCESSFULLY! 🎵');
+        }, 1000);
 
         // API Functions
         async function fetchFromAPI(endpoint) {
@@ -431,6 +669,33 @@
                 `Last updated: ${lastUpdateTime.toLocaleString()}`;
         }
 
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Load data for the selected tab
+            if (tabName === 'popular-songs') {
+                loadPopularPlaylistSongs();
+            } else if (tabName === 'top-users') {
+                loadTopPlaylistUsers();
+            } else if (tabName === 'playlist-trends') {
+                loadPlaylistTrends();
+            }
+        }
+
         async function loadOverallStats() {
             try {
                 const stats = await fetchFromAPI('/stats/overall');
@@ -439,6 +704,15 @@
                 document.getElementById('totalLikes').textContent = stats.totalLikes || 0;
                 document.getElementById('totalDislikes').textContent = stats.totalDislikes || 0;
                 document.getElementById('uniqueUsers').textContent = stats.uniqueUsers || 0;
+                document.getElementById('totalPlaylistEntries').textContent = stats.totalPlaylistEntries || 0;
+                
+                // Calculate engagement metrics
+                const totalEngagements = (stats.totalLikes || 0) + (stats.totalDislikes || 0) + (stats.totalPlaylistEntries || 0);
+                const engagementRate = stats.totalPlays > 0 ? ((totalEngagements / stats.totalPlays) * 100).toFixed(1) : 0;
+                const playlistConversion = stats.totalPlays > 0 ? ((stats.totalPlaylistEntries / stats.totalPlays) * 100).toFixed(1) : 0;
+                
+                document.getElementById('engagementRate').textContent = engagementRate + '%';
+                document.getElementById('playlistConversion').textContent = playlistConversion + '%';
                 
                 // Remove pulse animation after loading
                 document.querySelectorAll('.pulse').forEach(el => el.classList.remove('pulse'));
@@ -448,6 +722,24 @@
                 document.getElementById('totalLikes').textContent = 'Error';
                 document.getElementById('totalDislikes').textContent = 'Error';
                 document.getElementById('uniqueUsers').textContent = 'Error';
+                document.getElementById('totalPlaylistEntries').textContent = 'Error';
+            }
+        }
+
+        async function loadEngagementMetrics() {
+            try {
+                const playlistStats = await fetchFromAPI('/stats/playlists');
+                
+                // Calculate average playlist size
+                const avgSize = playlistStats.topUsers.length > 0 ? 
+                    (playlistStats.topUsers.reduce((sum, user) => sum + user.playlistSize, 0) / playlistStats.topUsers.length).toFixed(1) : 0;
+                
+                document.getElementById('avgPlaylistSize').textContent = avgSize;
+                document.getElementById('activeUsers').textContent = playlistStats.topUsers.length;
+                
+            } catch (error) {
+                document.getElementById('avgPlaylistSize').textContent = '0';
+                document.getElementById('activeUsers').textContent = '0';
             }
         }
 
@@ -474,8 +766,10 @@
                             <p>by ${song.poet || 'Unknown'}</p>
                         </div>
                         <div class="song-stats">
-                            <div class="count">${song.plays}</div>
-                            <div class="label">plays</div>
+                            <div class="metric">
+                                <div class="count">${song.plays}</div>
+                                <div class="label">plays</div>
+                            </div>
                         </div>
                     </div>
                 `).join('');
@@ -526,6 +820,129 @@
             }
         }
 
+        async function loadPopularPlaylistSongs() {
+            const container = document.getElementById('popularPlaylistSongs');
+            container.innerHTML = '<div class="loading pulse">Loading popular songs...</div>';
+            
+            try {
+                const playlistStats = await fetchFromAPI('/stats/playlists');
+                
+                if (playlistStats.topPlaylistSongs.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📋</div>
+                            <p>No songs added to playlists yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = playlistStats.topPlaylistSongs.map(song => `
+                    <div class="song-item playlist-stat">
+                        <div class="song-info">
+                            <h3>${song.title}</h3>
+                            <p>by ${song.poet || 'Unknown'}</p>
+                        </div>
+                        <div class="song-stats">
+                            <div class="metric">
+                                <div class="count" style="color: #9b59b6;">${song.addedCount}</div>
+                                <div class="label">additions</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="error">
+                        Failed to load playlist statistics.
+                    </div>
+                `;
+            }
+        }
+
+        async function loadTopPlaylistUsers() {
+            const container = document.getElementById('topPlaylistUsers');
+            container.innerHTML = '<div class="loading pulse">Loading top users...</div>';
+            
+            try {
+                const playlistStats = await fetchFromAPI('/stats/playlists');
+                
+                if (playlistStats.topUsers.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">👥</div>
+                            <p>No users with playlists yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = playlistStats.topUsers.map((user, index) => `
+                    <div class="playlist-user-item">
+                        <div>
+                            <h4>User #${index + 1}</h4>
+                            <span class="user-id">${user.userId}</span>
+                        </div>
+                        <div class="song-stats">
+                            <div class="metric">
+                                <div class="count" style="color: #9b59b6;">${user.playlistSize}</div>
+                                <div class="label">songs</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="error">
+                        Failed to load user statistics.
+                    </div>
+                `;
+            }
+        }
+
+        async function loadPlaylistTrends() {
+            const container = document.getElementById('playlistTrends');
+            container.innerHTML = '<div class="loading pulse">Loading trends...</div>';
+            
+            try {
+                const playlistStats = await fetchFromAPI('/stats/playlists');
+                
+                const totalEntries = playlistStats.totalPlaylistEntries || 0;
+                const uniqueSongs = playlistStats.topPlaylistSongs.length;
+                const avgAddsPerSong = uniqueSongs > 0 ? (totalEntries / uniqueSongs).toFixed(1) : 0;
+                
+                container.innerHTML = `
+                    <div class="engagement-metrics">
+                        <div class="metric-card">
+                            <div class="value">${totalEntries}</div>
+                            <div class="description">Total Playlist Entries</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="value">${uniqueSongs}</div>
+                            <div class="description">Unique Songs in Playlists</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="value">${avgAddsPerSong}</div>
+                            <div class="description">Avg Adds per Song</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="value">${playlistStats.topUsers.length}</div>
+                            <div class="description">Users with Playlists</div>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="error">
+                        Failed to load playlist trends.
+                    </div>
+                `;
+            }
+        }
+
         async function loadDetailedAnalytics() {
             const container = document.getElementById('detailedAnalytics');
             
@@ -548,20 +965,24 @@
                             <h3>${song.title}</h3>
                             <p>by ${song.poet || 'Unknown'}</p>
                         </div>
-                        <div class="song-stats" style="display: flex; gap: 20px;">
-                            <div style="text-align: center;">
+                        <div class="song-stats">
+                            <div class="metric">
                                 <div class="count" style="color: #667eea;">${song.plays || 0}</div>
                                 <div class="label">plays</div>
                             </div>
-                            <div style="text-align: center;">
+                            <div class="metric">
                                 <div class="count" style="color: #48bb78;">${song.likes || 0}</div>
                                 <div class="label">likes</div>
                             </div>
-                            <div style="text-align: center;">
+                            <div class="metric">
                                 <div class="count" style="color: #f56565;">${song.dislikes || 0}</div>
                                 <div class="label">dislikes</div>
                             </div>
-                            <div style="text-align: center;">
+                            <div class="metric">
+                                <div class="count" style="color: #9b59b6;">${song.playlistAdds || 0}</div>
+                                <div class="label">playlist</div>
+                            </div>
+                            <div class="metric">
                                 <div class="count" style="color: #805ad5;">${((song.likes || 0) / Math.max(1, (song.likes || 0) + (song.dislikes || 0)) * 100).toFixed(1)}%</div>
                                 <div class="label">ratio</div>
                             </div>
@@ -592,9 +1013,11 @@
             // Load all data concurrently
             await Promise.all([
                 loadOverallStats(),
+                loadEngagementMetrics(),
                 loadTopSongs(),
                 loadRecentRatings(),
-                loadDetailedAnalytics()
+                loadDetailedAnalytics(),
+                loadPopularPlaylistSongs() // Load initial tab content
             ]);
             
             updateLastUpdated();
@@ -610,9 +1033,10 @@
 
         // Handle API connection test
         setTimeout(() => {
-            fetchFromAPI('/health').catch(() => {
-                // API is offline, show instructions
-                console.log('API connection failed - this is expected if backend is not set up yet');
+            fetchFromAPI('/health').then(() => {
+                console.log('✅ API Connected Successfully!');
+            }).catch(() => {
+                console.log('❌ API connection failed - check Firebase deployment');
             });
         }, 1000);
     </script>
