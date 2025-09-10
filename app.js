@@ -639,60 +639,89 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
-// Enhanced dislike functionality
+// Enhanced rateSong function with skip functionality
 async function rateSong(rating) {
-    const currentSong = getCurrentSongData(); // Get current song info
+    const currentSong = getCurrentSongData(); // You'll need to implement this based on your current song tracking
     
     try {
         if (rating === 'dislike') {
-            // 1. Immediately skip to next song
-            skipToNextSong();
+            // 1. Add visual feedback immediately
+            const dislikeBtn = document.getElementById('dislikeBtn');
+            dislikeBtn.classList.add('btn-feedback');
             
-            // 2. Add to user's blacklist
+            // 2. Show skip overlay
+            showSkipOverlay();
+            
+            // 3. Immediately skip to next song
+            await skipToNextSong();
+            
+            // 4. Add to blacklist
             await addToBlacklist(currentSong.id);
             
-            // 3. Record the dislike rating
+            // 5. Record the dislike rating (optional)
             await recordRating(currentSong.id, 'dislike');
             
-            // 4. Show feedback to user
-            showToast('این شعر از پلی لیست شما حذف شد و دیگر پخش نخواهد شد', 'success');
+            // 6. Show success message
+            showToast('شعر رد شد و دیگر پخش نخواهد شد', 'success');
+            
+            // 7. Remove feedback animation
+            setTimeout(() => {
+                dislikeBtn.classList.remove('btn-feedback');
+            }, 600);
             
         } else if (rating === 'like') {
-            // Just record the like
+            // Handle like as before
             await recordRating(currentSong.id, 'like');
             showToast('شعر به لیست مورد علاقه‌های شما اضافه شد!', 'success');
+            
+            // Update UI
+            const likeBtn = document.getElementById('likeBtn');
+            likeBtn.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+            likeBtn.innerHTML = '✅ پسندیدم';
         }
-        
-        // Update UI to reflect the rating
-        updateRatingUI(rating);
         
     } catch (error) {
         console.error('Rating error:', error);
-        showToast('خطا در ثبت امتیاز', 'error');
+        showToast('خطا در عملیات', 'error');
     }
 }
 
+// Get current song data - you'll need to adapt this to your current implementation
+function getCurrentSongData() {
+    // This should return the current song object with at least an 'id' property
+    // Example implementation:
+    return {
+        id: window.currentSongId || Date.now(), // Use your actual song ID
+        title: document.getElementById('title').textContent,
+        poet: document.getElementById('poet').textContent
+    };
+}
+
 // Skip to next song immediately
-function skipToNextSong() {
+async function skipToNextSong() {
     const audio = document.getElementById('audio');
     
     // Stop current audio
     audio.pause();
     audio.currentTime = 0;
     
-    // Load next song
-    loadNextSong();
-    
-    // Add visual feedback
+    // Show loading state
     document.getElementById('lyrics').classList.add('loading');
     document.getElementById('title').classList.add('loading');
+    document.getElementById('lyrics').textContent = 'در حال بارگذاری شعر بعدی...';
+    document.getElementById('title').textContent = 'در حال بارگذاری...';
+    
+    // Load next song - adapt this to your existing function
+    try {
+        await loadNextSong(); // You'll need to implement this or adapt your existing function
+    } catch (error) {
+        console.error('Error loading next song:', error);
+        showToast('خطا در بارگذاری شعر بعدی', 'error');
+    }
 }
 
 // Add song to user's permanent blacklist
 async function addToBlacklist(songId) {
-    const userId = getUserId(); // Get current user ID
-    
     try {
         // Store in local storage for immediate effect
         let blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
@@ -701,14 +730,16 @@ async function addToBlacklist(songId) {
             localStorage.setItem('blacklistedSongs', JSON.stringify(blacklist));
         }
         
-        // Also send to server for persistence across devices
+        // Also send to server if you have an API endpoint
+        // Uncomment and adapt this if you have a server API:
+        /*
         const response = await fetch('/api/blacklist', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                userId: userId,
+                userId: getUserId(), // Implement this function
                 songId: songId,
                 action: 'add'
             })
@@ -717,6 +748,7 @@ async function addToBlacklist(songId) {
         if (!response.ok) {
             throw new Error('Failed to update server blacklist');
         }
+        */
         
     } catch (error) {
         console.error('Error adding to blacklist:', error);
@@ -730,64 +762,147 @@ function isSongBlacklisted(songId) {
     return blacklist.includes(songId);
 }
 
-// Filter out blacklisted songs when getting next song
-async function getNextSong() {
+// Show skip overlay
+function showSkipOverlay() {
+    const overlay = document.getElementById('skipOverlay');
+    overlay.classList.add('show');
+    
+    // Hide after 2 seconds
+    setTimeout(() => {
+        overlay.classList.remove('show');
+    }, 2000);
+}
+
+// Enhanced loadNextSong function that respects blacklist
+async function loadNextSong() {
     let attempts = 0;
     const maxAttempts = 10; // Prevent infinite loop
     
     while (attempts < maxAttempts) {
-        const song = await fetchRandomSong(); // Your existing function
+        // Get a random song using your existing method
+        const song = await getRandomSong(); // You'll need to implement this or use your existing function
         
         if (!isSongBlacklisted(song.id)) {
-            return song;
+            // Load this song
+            await loadSong(song); // You'll need to implement this or use your existing function
+            return;
         }
         
         attempts++;
     }
     
-    // If all songs seem blacklisted, you might want to:
-    // 1. Show a message about refreshing recommendations
-    // 2. Temporarily ignore blacklist
-    // 3. Suggest user to clear some dislikes
-    
-    showToast('تمام شعرهای پیشنهادی قبلاً نپسندیده شده‌اند. در حال تازه‌سازی...', 'info');
-    return await fetchRandomSong(); // Return anyway
+    // If all songs seem blacklisted, show message and load anyway
+    showToast('همه اشعار پیشنهادی قبلاً رد شده‌اند', 'error');
+    const song = await getRandomSong();
+    await loadSong(song);
 }
 
-// Updated button text and styling for better UX
-function updateDislikeButton() {
-    const dislikeBtn = document.getElementById('dislikeBtn');
-    dislikeBtn.innerHTML = '⏭️ رد کردن'; // Skip icon + text
-    dislikeBtn.title = 'این شعر را رد کن و دیگر پخش نکن';
-}
+// Example implementations you'll need to adapt to your existing code:
 
-// Show user how many songs they've disliked (optional)
-function updateUserStats() {
-    const blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
-    const userStatus = document.getElementById('userStatus');
-    
-    if (blacklist.length > 0) {
-        userStatus.textContent = `${blacklist.length} شعر نپسندیده`;
+// Get random song - adapt this to your API
+async function getRandomSong() {
+    // This is just an example - replace with your actual API call
+    try {
+        const response = await fetch('/api/random-song'); // Your API endpoint
+        const song = await response.json();
+        return song;
+    } catch (error) {
+        console.error('Error fetching random song:', error);
+        // Return a dummy song for testing
+        return {
+            id: Date.now(),
+            title: 'شعر تست',
+            poet: 'شاعر تست',
+            lyrics: 'این یک شعر تست است...',
+            audio: ''
+        };
     }
 }
 
-// Option to manage blacklisted songs
-function showBlacklistManager() {
-    const blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
+// Load song - adapt this to your existing implementation
+async function loadSong(song) {
+    // Update UI
+    document.getElementById('title').textContent = song.title;
+    document.getElementById('poet').textContent = song.poet;
+    document.getElementById('lyrics').textContent = song.lyrics;
     
-    // You could add this to the playlist modal or create a separate modal
-    // Allow users to remove songs from blacklist if they change their mind
+    // Store current song ID for blacklisting
+    window.currentSongId = song.id;
+    
+    // Load audio if available
+    const audio = document.getElementById('audio');
+    if (song.audio) {
+        audio.src = song.audio;
+        audio.load();
+    }
+    
+    // Remove loading state
+    document.getElementById('lyrics').classList.remove('loading');
+    document.getElementById('title').classList.remove('loading');
+    
+    // Reset buttons
+    resetButtonStates();
 }
 
-// Initialize the enhanced functionality
-document.addEventListener('DOMContentLoaded', function() {
-    updateDislikeButton();
-    updateUserStats();
+// Reset button states when loading new song
+function resetButtonStates() {
+    const likeBtn = document.getElementById('likeBtn');
+    const dislikeBtn = document.getElementById('dislikeBtn');
+    const playlistBtn = document.getElementById('playlistAddBtn');
     
-    // You might also want to add a keyboard shortcut
+    // Reset like button
+    likeBtn.style.background = 'linear-gradient(45deg, #00b894, #55efc4)';
+    likeBtn.innerHTML = '👍 پسندیدم';
+    
+    // Reset playlist button
+    playlistBtn.classList.remove('added');
+    playlistBtn.innerHTML = '➕ افزودن';
+}
+
+// Show toast message
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = `toast ${type}`;
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Record rating (optional - adapt to your API)
+async function recordRating(songId, rating) {
+    try {
+        // Store locally
+        let ratings = JSON.parse(localStorage.getItem('songRatings') || '{}');
+        ratings[songId] = rating;
+        localStorage.setItem('songRatings', JSON.stringify(ratings));
+        
+        // Send to server if you have an API
+        // await fetch('/api/rate', { ... });
+        
+    } catch (error) {
+        console.error('Error recording rating:', error);
+    }
+}
+
+// Initialize enhanced functionality when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Add keyboard shortcuts for better UX
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowRight' || e.key === 's') {
-            rateSong('dislike'); // Skip with right arrow or 's' key
+        // Skip with right arrow, 's' key, or spacebar
+        if (e.key === 'ArrowRight' || e.key === 's' || e.key === ' ') {
+            e.preventDefault();
+            rateSong('dislike');
+        }
+        // Like with left arrow or 'l' key  
+        else if (e.key === 'ArrowLeft' || e.key === 'l') {
+            e.preventDefault();
+            rateSong('like');
         }
     });
+    
+    console.log('Skip functionality initialized');
 });
+
