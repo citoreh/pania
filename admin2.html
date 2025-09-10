@@ -744,6 +744,12 @@
 
         // Render user table
         function renderUserTable() {
+            if (filteredUsers.length === 0) {
+                document.getElementById('userManagementContent').innerHTML = 
+                    '<div class="loading">No user data available. Users will appear here as they interact with your app.</div>';
+                return;
+            }
+
             const tableHTML = `
                 <table class="data-table">
                     <thead>
@@ -786,6 +792,12 @@
 
         // Render playlist table
         function renderPlaylistTable() {
+            if (filteredPlaylists.length === 0) {
+                document.getElementById('playlistAnalyticsContent').innerHTML = 
+                    '<div class="loading">No playlist data available. Playlists will appear here as users create them.</div>';
+                return;
+            }
+
             const tableHTML = `
                 <table class="data-table">
                     <thead>
@@ -1139,12 +1151,21 @@
             try {
                 console.log('📊 Exporting all dashboard data...');
                 
+                const [overview, topSongs, recentActivity, detailed] = await Promise.all([
+                    fetch(`${API_BASE_URL}/stats/overall`).then(r => r.ok ? r.json() : {}),
+                    fetch(`${API_BASE_URL}/stats/top-songs?limit=50`).then(r => r.ok ? r.json() : []),
+                    fetch(`${API_BASE_URL}/stats/recent-ratings?limit=100`).then(r => r.ok ? r.json() : []),
+                    fetch(`${API_BASE_URL}/stats/detailed`).then(r => r.ok ? r.json() : [])
+                ]);
+                
                 const exportData = {
                     exportDate: new Date().toISOString(),
+                    overview,
+                    topSongs,
+                    recentActivity,
+                    detailedAnalytics: detailed,
                     users: userData,
-                    playlists: playlistData,
-                    overview: await generateMockStats(),
-                    topSongs: await generateMockTopSongs()
+                    playlists: playlistData
                 };
                 
                 const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
