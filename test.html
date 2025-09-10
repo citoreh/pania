@@ -346,6 +346,12 @@
                     audio.src = firstSong.url;
                     updateDisplay(firstSong);
                     
+                    // Try to play, but handle autoplay restrictions
+                    audio.play().catch(e => {
+                        console.log('Autoplay blocked - showing click hint');
+                        clickHintEl.style.display = 'block';
+                    });
+                    
                     console.log('Player initialized successfully');
                 },
                 error: function(error) {
