@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pania Music Player - Debug Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .debug-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .debug-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .debug-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        .debug-header p {
+            opacity: 0.8;
+            font-size: 1.1rem;
+        }
+
+        .debug-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .debug-panel {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .debug-panel h3 {
+            color: #FFC107;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            border-bottom: 2px solid rgba(255, 193, 7, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .debug-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .debug-label {
+            color: #E3F2FD;
+            font-weight: 600;
+        }
+
+        .debug-value {
+            color: #4CAF50;
+            font-weight: bold;
+            word-break: break-all;
+            text-align: left;
+            direction: ltr;
+        }
+
+        .debug-value.error {
+            color: #f44336;
+        }
+
+        .debug-value.warning {
+            color: #FF9800;
+        }
+
+        .debug-log {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .debug-log-entry {
+            margin-bottom: 5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .debug-log-entry.success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .debug-log-entry.error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+
+        .debug-log-entry.warning {
+            background: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
+
+        .debug-log-entry.info {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+        }
+
+        .debug-log-time {
+            opacity: 0.7;
+            font-size: 0.8rem;
+            min-width: 80px;
+        }
+
+        .debug-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .debug-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .debug-btn.refresh {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+        }
+
+        .debug-btn.clear {
+            background: linear-gradient(45deg, #FF5722, #FF8A65);
+            color: white;
+        }
+
+        .debug-btn.export {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+        }
+
+        .debug-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .connection-status.online {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+
+        .connection-status.offline {
+            background: rgba(244, 67, 54, 0.3);
+            color: #f44336;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4CAF50;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .debug-log::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .debug-log::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .debug-log::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .debug-log::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .debug-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .debug-controls {
+                justify-content: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <div class="debug-header">
+            <h1>🔍 Debug Console</h1>
+            <p>Real-time monitoring and debugging for Pania Music Player</p>
+        </div>
+
+        <div class="debug-controls">
+            <button class="debug-btn refresh" onclick="refreshDebugData()">🔄 Refresh</button>
+            <button class="debug-btn clear" onclick="clearDebugLog()">🗑️ Clear Log</button>
+            <button class="debug-btn export" onclick="exportDebugData()">📊 Export Data</button>
+        </div>
+
+        <div class="debug-grid">
+            <!-- System Status Panel -->
+            <div class="debug-panel">
+                <h3>📱 System Status</h3>
+                <div class="debug-item">
+                    <span class="debug-label">Connection:</span>
+                    <span class="connection-status offline" id="connectionStatus">
+                        🔴 Checking...
+                    </span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">User ID:</span>
+                    <span class="debug-value" id="debugUserId">Loading...</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">User Type:</span>
+                    <span class="debug-value" id="debugUserType">Loading...</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">Telegram:</span>
+                    <span class="debug-value" id="debugTelegram">Loading...</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">Current Song:</span>
+                    <span class="debug-value" id="debugCurrentSong">None</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">Play Mode:</span>
+                    <span class="debug-value" id="debugPlayMode">Shuffle</span>
+                </div>
+            </div>
+
+            <!-- Music Data Panel -->
+            <div class="debug-panel">
+                <h3>🎵 Music Data</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number" id="totalSongs">0</span>
+                        <div class="stat-label">Total Songs</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="playlistSongs">0</span>
+                        <div class="stat-label">In Playlist</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="currentIndex">0</span>
+                        <div class="stat-label">Current Index</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="apiCalls">0</span>
+                        <div class="stat-label">API Calls</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Status Panel -->
+            <div class="debug-panel">
+                <h3>🌐 API Status</h3>
+                <div class="debug-item">
+                    <span class="debug-label">Base URL:</span>
+                    <span class="debug-value" id="apiBaseUrl">Loading...</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">Health Status:</span>
+                    <span class="debug-value" id="apiHealth">Checking...</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">Last Call:</span>
+                    <span class="debug-value" id="lastApiCall">None</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">Response Time:</span>
+                    <span class="debug-value" id="responseTime">-</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">Error Count:</span>
+                    <span class="debug-value error" id="errorCount">0</span>
+                </div>
+            </div>
+
+            <!-- Activity Log Panel -->
+            <div class="debug-panel" style="grid-column: 1 / -1;">
+                <h3>📋 Activity Log</h3>
+                <div class="debug-log" id="debugLog">
+                    <div class="debug-log-entry info">
+                        <span class="debug-log-time" id="initTime"></span>
+                        <span>Debug console initialized</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Debug Console JavaScript
+        let debugData = {
+            logs: [],
+            apiCalls: 0,
+            errors: 0,
+            startTime: new Date()
+        };
+
+        // Initialize debug console
+        function initDebugConsole() {
+            document.getElementById('initTime').textContent = new Date().toLocaleTimeString();
+            addDebugLog('Debug console started', 'info');
+            
+            // Check if main app is accessible (same domain)
+            try {
+                if (window.opener && window.opener.telegramUser) {
+                    // Connected to main app
+                    addDebugLog('Connected to main application', 'success');
+                    startDataSync();
+                } else {
+                    // Standalone mode
+                    addDebugLog('Running in standalone mode', 'warning');
+                    loadStandaloneDebugData();
+                }
+            } catch (e) {
+                addDebugLog('Could not connect to main app - standalone mode', 'warning');
+                loadStandaloneDebugData();
+            }
+            
+            // Start periodic refresh
+            setInterval(refreshDebugData, 5000);
+        }
+
+        // Add log entry
+        function addDebugLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = { timestamp, message, type };
+            debugData.logs.push(logEntry);
+            
+            // Keep only last 50 entries
+            if (debugData.logs.length > 50) {
+                debugData.logs.shift();
+            }
+            
+            updateDebugDisplay();
+        }
+
+        // Update debug display
+        function updateDebugDisplay() {
+            const logContainer = document.getElementById('debugLog');
+            logContainer.innerHTML = debugData.logs.map(entry => `
+                <div class="debug-log-entry ${entry.type}">
+                    <span class="debug-log-time">${entry.timestamp}</span>
+                    <span>${entry.message}</span>
+                </div>
+            `).join('');
+            
+            // Scroll to bottom
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Sync data from main app
+        function startDataSync() {
+            try {
+                if (window.opener && window.opener.telegramUser) {
+                    const mainApp = window.opener;
+                    
+                    // Update system status
+                    document.getElementById('debugUserId').textContent = mainApp.telegramUser?.id || 'None';
+                    document.getElementById('debugUserType').textContent = mainApp.isInTelegram ? 'Telegram User' : 'Demo User';
+                    document.getElementById('debugTelegram').textContent = mainApp.isInTelegram ? 'Available' : 'Not Available';
+                    document.getElementById('debugCurrentSong').textContent = mainApp.currentSong?.title || 'None';
+                    document.getElementById('debugPlayMode').textContent = mainApp.isPlayingUserPlaylist ? 'User Playlist' : 'Shuffled';
+                    
+                    // Update music data
+                    document.getElementById('totalSongs').textContent = mainApp.playlist?.length || 0;
+                    document.getElementById('playlistSongs').textContent = mainApp.userPlaylist?.length || 0;
+                    document.getElementById('currentIndex').textContent = mainApp.currentIndex || 0;
+                    
+                    // Update API info
+                    document.getElementById('apiBaseUrl').textContent = mainApp.API_BASE_URL;
+                    
+                    addDebugLog('Data synced from main application', 'success');
+                }
+            } catch (e) {
+                addDebugLog('Error syncing data: ' + e.message, 'error');
+            }
+        }
+
+        // Load standalone debug data
+        function loadStandaloneDebugData() {
+            // Set default values for standalone mode
+            document.getElementById('debugUserId').textContent = 'Standalone Mode';
+            document.getElementById('debugUserType').textContent = 'Debug Only';
+            document.getElementById('debugTelegram').textContent = 'Not Connected';
+            document.getElementById('apiBaseUrl').textContent = 'https://api-o27g4vauhq-uc.a.run.app';
+            
+            // Test API connection
+            testAPIConnection();
+        }
+
+        // Test API connection
+        async function testAPIConnection() {
+            const startTime = Date.now();
+            const apiUrl = 'https://api-o27g4vauhq-uc.a.run.app/health';
+            
+            try {
+                addDebugLog('Testing API connection...', 'info');
+                const response = await fetch(apiUrl);
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                if (response.ok) {
+                    document.getElementById('connectionStatus').className = 'connection-status online';
+                    document.getElementById('connectionStatus').innerHTML = '🟢 Online';
+                    document.getElementById('apiHealth').textContent = 'Healthy';
+                    document.getElementById('responseTime').textContent = responseTime + 'ms';
+                    addDebugLog(`API connection successful (${responseTime}ms)`, 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('connectionStatus').className = 'connection-status offline';
+                document.getElementById('connectionStatus').innerHTML = '🔴 Offline';
+                document.getElementById('apiHealth').textContent = 'Error: ' + error.message;
+                addDebugLog('API connection failed: ' + error.message, 'error');
+                debugData.errors++;
+            }
+            
+            document.getElementById('lastApiCall').textContent = new Date().toLocaleTimeString();
+            document.getElementById('errorCount').textContent = debugData.errors;
+        }
+
+        // Refresh debug data
+        function refreshDebugData() {
+            addDebugLog('Refreshing debug data...', 'info');
+            
+            if (window.opener && window.opener.telegramUser) {
+                startDataSync();
+            } else {
+                testAPIConnection();
+            }
+        }
+
+        // Clear debug log
+        function clearDebugLog() {
+            debugData.logs = [];
+            addDebugLog('Debug log cleared', 'info');
+        }
+
+        // Export debug data
+        function exportDebugData() {
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                uptime: Date.now() - debugData.startTime.getTime(),
+                logs: debugData.logs,
+                stats: {
+                    apiCalls: debugData.apiCalls,
+                    errors: debugData.errors
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pania-debug-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addDebugLog('Debug data exported', 'success');
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initDebugConsole);
+    </script>
+</body>
+</html>
