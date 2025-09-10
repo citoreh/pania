@@ -4,16 +4,40 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <div id="result">Checking Papa Parse...</div>
+    <div id="result">Testing CSV load...</div>
     <script>
-        console.log('Papa Parse loaded:', typeof Papa);
-        document.getElementById('result').innerHTML = 'Papa Parse type: ' + typeof Papa;
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QP9XuvvqLrbzaQ0rV9WfSVHYOBKQgJZUTzTQeSpzyUSQbSxIkJUlPFc67K8k2aIDuB5mcPrjHMU/pub?output=csv';
         
-        if (typeof Papa === 'undefined') {
-            document.getElementById('result').innerHTML = 'ERROR: Papa Parse not loaded!';
-        } else {
-            document.getElementById('result').innerHTML = 'Papa Parse loaded successfully. Version: ' + (Papa.version || 'unknown');
-        }
+        console.log('Starting Papa Parse...');
+        document.getElementById('result').innerHTML = 'Papa Parse starting...';
+        
+        Papa.parse(csvUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                console.log('Papa Parse completed:', results);
+                document.getElementById('result').innerHTML = `
+                    SUCCESS!<br>
+                    Rows: ${results.data.length}<br>
+                    Columns: ${results.meta.fields?.join(', ') || 'No headers'}<br>
+                    First title: ${results.data[0]?.title || 'No title found'}
+                `;
+            },
+            error: function(error) {
+                console.error('Papa Parse error:', error);
+                document.getElementById('result').innerHTML = `Papa Parse ERROR: ${error.message}`;
+            },
+            beforeFirstChunk: function(chunk) {
+                console.log('First chunk received:', chunk.substring(0, 100));
+                document.getElementById('result').innerHTML = 'CSV download started...';
+            }
+        });
+        
+        setTimeout(() => {
+            if (document.getElementById('result').innerHTML.includes('Testing') || document.getElementById('result').innerHTML.includes('starting')) {
+                document.getElementById('result').innerHTML = 'TIMEOUT: Papa Parse did not respond after 10 seconds';
+            }
+        }, 10000);
     </script>
 </body>
 </html>
