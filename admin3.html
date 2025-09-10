@@ -655,20 +655,87 @@
             }
         }
 
+        // Real data fetchers (no mock data)
+        async function loadOverviewStatsFromAPI() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/overview`);
+                if (response.ok) {
+                    return await response.json();
+                }
+                throw new Error('Failed to fetch stats');
+            } catch (error) {
+                console.error('Error fetching overview stats:', error);
+                return {
+                    totalUsers: 0,
+                    totalPlays: 0,
+                    totalPlaylists: 0,
+                    activeUsers: 0
+                };
+            }
+        }
+
+        async function loadUserDataFromAPI() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/users`);
+                if (response.ok) {
+                    return await response.json();
+                }
+                throw new Error('Failed to fetch users');
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                return [];
+            }
+        }
+
+        async function loadPlaylistDataFromAPI() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/playlists`);
+                if (response.ok) {
+                    return await response.json();
+                }
+                throw new Error('Failed to fetch playlists');
+            } catch (error) {
+                console.error('Error fetching playlist data:', error);
+                return [];
+            }
+        }
+
+        async function loadTopSongsFromAPI() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/top-songs?limit=10`);
+                if (response.ok) {
+                    return await response.json();
+                }
+                throw new Error('Failed to fetch top songs');
+            } catch (error) {
+                console.error('Error fetching top songs:', error);
+                return [];
+            }
+        }
+
         // Load enhanced overview statistics
         async function loadOverviewStats() {
             try {
-                // Simulate API calls for enhanced stats
-                const stats = await generateMockStats();
+                const stats = await loadOverviewStatsFromAPI();
                 
-                document.getElementById('totalUsers').textContent = stats.totalUsers;
-                document.getElementById('totalPlays').textContent = stats.totalPlays;
-                document.getElementById('totalPlaylists').textContent = stats.totalPlaylists;
-                document.getElementById('activeUsers').textContent = stats.activeUsers;
+                document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+                document.getElementById('totalPlays').textContent = stats.totalPlays || 0;
+                document.getElementById('totalPlaylists').textContent = stats.totalPlaylists || 0;
+                document.getElementById('activeUsers').textContent = stats.activeUsers || 0;
                 
-                console.log('📊 Enhanced overview stats loaded:', stats);
+                // Update change indicators if available
+                document.getElementById('usersChange').textContent = stats.usersChange || '+0 today';
+                document.getElementById('playsChange').textContent = stats.playsChange || '+0 today';
+                document.getElementById('playlistsChange').textContent = stats.playlistsChange || '+0 today';
+                document.getElementById('activeUsersChange').textContent = stats.activeUsersChange || '+0 since yesterday';
+                
+                console.log('📊 Overview stats loaded');
             } catch (error) {
                 console.error('❌ Error loading overview stats:', error);
+                document.getElementById('totalUsers').textContent = '0';
+                document.getElementById('totalPlays').textContent = '0';
+                document.getElementById('totalPlaylists').textContent = '0';
+                document.getElementById('activeUsers').textContent = '0';
                 showError('Failed to load overview statistics');
             }
         }
@@ -676,35 +743,41 @@
         // Load user management data
         async function loadUserManagement() {
             try {
-                userData = await generateMockUserData();
+                userData = await loadUserDataFromAPI();
                 filteredUsers = [...userData];
                 renderUserTable();
                 console.log('👥 User management data loaded:', userData.length);
             } catch (error) {
                 console.error('❌ Error loading user data:', error);
                 document.getElementById('userManagementContent').innerHTML = 
-                    '<div class="error-message">Failed to load user data</div>';
+                    '<div class="error-message">Failed to load user data. Please check your API connection.</div>';
             }
         }
 
         // Load playlist analytics
         async function loadPlaylistAnalytics() {
             try {
-                playlistData = await generateMockPlaylistData();
+                playlistData = await loadPlaylistDataFromAPI();
                 filteredPlaylists = [...playlistData];
                 renderPlaylistTable();
                 console.log('📝 Playlist analytics loaded:', playlistData.length);
             } catch (error) {
                 console.error('❌ Error loading playlist data:', error);
                 document.getElementById('playlistAnalyticsContent').innerHTML = 
-                    '<div class="error-message">Failed to load playlist data</div>';
+                    '<div class="error-message">Failed to load playlist data. Please check your API connection.</div>';
             }
         }
 
         // Load top songs
         async function loadTopSongs() {
             try {
-                const topSongs = await generateMockTopSongs();
+                const topSongs = await loadTopSongsFromAPI();
+                
+                if (topSongs.length === 0) {
+                    document.getElementById('topSongsContent').innerHTML = 
+                        '<div class="loading">No song data available yet. Songs will appear here as users interact with your app.</div>';
+                    return;
+                }
                 
                 const tableHTML = `
                     <table class="data-table">
@@ -723,10 +796,10 @@
                                 <tr>
                                     <td><span class="rank-badge">${index + 1}</span></td>
                                     <td><strong>${song.title}</strong></td>
-                                    <td>${song.poet}</td>
-                                    <td><strong>${song.plays}</strong></td>
-                                    <td>${song.uniqueListeners}</td>
-                                    <td><strong>${song.avgRating.toFixed(1)}/5</strong></td>
+                                    <td>${song.poet || 'Unknown'}</td>
+                                    <td><strong>${song.plays || 0}</strong></td>
+                                    <td>${song.uniqueListeners || 0}</td>
+                                    <td><strong>${song.avgRating ? song.avgRating.toFixed(1) : '0.0'}/5</strong></td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -738,7 +811,7 @@
             } catch (error) {
                 console.error('❌ Error loading top songs:', error);
                 document.getElementById('topSongsContent').innerHTML = 
-                    '<div class="error-message">Failed to load top songs</div>';
+                    '<div class="error-message">Failed to load top songs data. Please check your API connection.</div>';
             }
         }
 
@@ -746,7 +819,7 @@
         function renderUserTable() {
             if (filteredUsers.length === 0) {
                 document.getElementById('userManagementContent').innerHTML = 
-                    '<div class="loading">No user data available. Users will appear here as they interact with your app.</div>';
+                    '<div class="loading">No user data available yet. Users will appear here as they interact with your app.</div>';
                 return;
             }
 
@@ -794,7 +867,7 @@
         function renderPlaylistTable() {
             if (filteredPlaylists.length === 0) {
                 document.getElementById('playlistAnalyticsContent').innerHTML = 
-                    '<div class="loading">No playlist data available. Playlists will appear here as users create them.</div>';
+                    '<div class="loading">No playlist data available yet. Playlists will appear here as users create them.</div>';
                 return;
             }
 
@@ -840,23 +913,41 @@
             content.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Loading user details...</div>';
             
             try {
+                // Find user in loaded data
                 const user = userData.find(u => u.id === userId);
+                if (!user) {
+                    content.innerHTML = '<div class="error-message">User not found</div>';
+                    return;
+                }
+                
+                // Get user's playlists
                 const userPlaylists = playlistData.filter(p => p.userId === userId);
+                
+                // Try to fetch additional user details from API
+                let additionalUserData = {};
+                try {
+                    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`);
+                    if (response.ok) {
+                        additionalUserData = await response.json();
+                    }
+                } catch (error) {
+                    console.log('Could not fetch additional user data:', error);
+                }
                 
                 const detailsHTML = `
                     <div style="text-align: center; margin-bottom: 20px;">
                         <div class="user-avatar" style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto 15px;">${user.username.charAt(0).toUpperCase()}</div>
                         <h3>${user.username}</h3>
-                        <p style="color: #718096;">Member since ${formatDate(new Date(user.joinDate))}</p>
+                        <p style="color: #718096;">Member since ${user.joinDate ? formatDate(new Date(user.joinDate)) : 'Unknown'}</p>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
                         <div style="text-align: center; padding: 15px; background: #f7fafc; border-radius: 10px;">
-                            <div style="font-size: 1.5rem; font-weight: 700; color: #2d3748;">${user.totalPlays}</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #2d3748;">${user.totalPlays || 0}</div>
                             <div style="color: #718096;">Total Plays</div>
                         </div>
                         <div style="text-align: center; padding: 15px; background: #f7fafc; border-radius: 10px;">
-                            <div style="font-size: 1.5rem; font-weight: 700; color: #2d3748;">${user.playlistCount}</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #2d3748;">${user.playlistCount || userPlaylists.length}</div>
                             <div style="color: #718096;">Playlists</div>
                         </div>
                     </div>
@@ -868,8 +959,8 @@
                                 <div class="playlist-info">
                                     <div class="playlist-title">${playlist.name}</div>
                                     <div class="playlist-stats">
-                                        <span>🎵 ${playlist.songCount} songs</span>
-                                        <span>📅 ${formatDate(new Date(playlist.created))}</span>
+                                        <span>🎵 ${playlist.songCount || 0} songs</span>
+                                        <span>📅 ${playlist.created ? formatDate(new Date(playlist.created)) : 'Unknown'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -956,7 +1047,7 @@
             renderPlaylistTable();
         }
 
-        // Initialize enhanced charts
+        // Initialize charts with real data or empty states
         function initializeCharts() {
             if (typeof Chart === 'undefined') {
                 console.error('Chart.js failed to load');
@@ -964,7 +1055,7 @@
             }
 
             try {
-                // User Activity Chart
+                // User Activity Chart - Will be populated with real data
                 const userActivityCtx = document.getElementById('userActivityChart');
                 if (userActivityCtx) {
                     charts.userActivity = new Chart(userActivityCtx, {
@@ -973,7 +1064,7 @@
                             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                             datasets: [{
                                 label: 'Active Users',
-                                data: [120, 150, 180, 160, 190, 210, 185],
+                                data: [0, 0, 0, 0, 0, 0, 0], // Empty data initially
                                 borderColor: '#667eea',
                                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                                 tension: 0.4
@@ -982,31 +1073,37 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } }
+                            plugins: { 
+                                legend: { display: false },
+                                title: { display: true, text: 'No activity data available yet' }
+                            }
                         }
                     });
                 }
 
-                // User Engagement Chart
+                // User Engagement Chart - Will be populated with real data
                 const userEngagementCtx = document.getElementById('userEngagementChart');
                 if (userEngagementCtx) {
                     charts.userEngagement = new Chart(userEngagementCtx, {
                         type: 'doughnut',
                         data: {
-                            labels: ['High Engagement', 'Medium Engagement', 'Low Engagement'],
+                            labels: ['No Data Available'],
                             datasets: [{
-                                data: [30, 45, 25],
-                                backgroundColor: ['#4CAF50', '#FF9800', '#f44336']
+                                data: [1],
+                                backgroundColor: ['#e2e8f0']
                             }]
                         },
                         options: {
                             responsive: true,
-                            maintainAspectRatio: false
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: { display: true, text: 'No engagement data available yet' }
+                            }
                         }
                     });
                 }
 
-                // Playlist Trends Chart
+                // Playlist Trends Chart - Will be populated with real data
                 const playlistTrendsCtx = document.getElementById('playlistTrendsChart');
                 if (playlistTrendsCtx) {
                     charts.playlistTrends = new Chart(playlistTrendsCtx, {
@@ -1015,19 +1112,22 @@
                             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
                             datasets: [{
                                 label: 'New Playlists',
-                                data: [25, 30, 45, 35, 50, 42],
+                                data: [0, 0, 0, 0, 0, 0], // Empty data initially
                                 backgroundColor: '#764ba2'
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } }
+                            plugins: { 
+                                legend: { display: false },
+                                title: { display: true, text: 'No playlist data available yet' }
+                            }
                         }
                     });
                 }
 
-                // Retention Chart
+                // Retention Chart - Will be populated with real data
                 const retentionCtx = document.getElementById('retentionChart');
                 if (retentionCtx) {
                     charts.retention = new Chart(retentionCtx, {
@@ -1036,7 +1136,7 @@
                             labels: ['Day 1', 'Day 7', 'Day 30', 'Day 90'],
                             datasets: [{
                                 label: 'Retention Rate',
-                                data: [100, 65, 40, 25],
+                                data: [0, 0, 0, 0], // Empty data initially
                                 borderColor: '#9C27B0',
                                 backgroundColor: 'rgba(156, 39, 176, 0.1)',
                                 tension: 0.4
@@ -1045,7 +1145,10 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                                legend: { display: false },
+                                title: { display: true, text: 'No retention data available yet' }
+                            },
                             scales: {
                                 y: {
                                     beginAtZero: true,
@@ -1065,9 +1168,61 @@
             }
         }
 
-        // Update charts with real data
+        // Update charts with real data from API
         async function updateCharts() {
-            console.log('📈 Charts updated with latest data');
+            try {
+                // Fetch real analytics data
+                const analyticsData = await fetchAnalyticsData();
+                
+                // Update User Activity Chart
+                if (charts.userActivity && analyticsData.userActivity) {
+                    charts.userActivity.data.datasets[0].data = analyticsData.userActivity.data;
+                    charts.userActivity.options.plugins.title.text = '';
+                    charts.userActivity.update();
+                }
+                
+                // Update User Engagement Chart
+                if (charts.userEngagement && analyticsData.userEngagement) {
+                    charts.userEngagement.data.labels = analyticsData.userEngagement.labels;
+                    charts.userEngagement.data.datasets[0].data = analyticsData.userEngagement.data;
+                    charts.userEngagement.data.datasets[0].backgroundColor = ['#4CAF50', '#FF9800', '#f44336'];
+                    charts.userEngagement.options.plugins.title.text = '';
+                    charts.userEngagement.update();
+                }
+                
+                // Update Playlist Trends Chart
+                if (charts.playlistTrends && analyticsData.playlistTrends) {
+                    charts.playlistTrends.data.datasets[0].data = analyticsData.playlistTrends.data;
+                    charts.playlistTrends.options.plugins.title.text = '';
+                    charts.playlistTrends.update();
+                }
+                
+                // Update Retention Chart
+                if (charts.retention && analyticsData.retention) {
+                    charts.retention.data.datasets[0].data = analyticsData.retention.data;
+                    charts.retention.options.plugins.title.text = '';
+                    charts.retention.update();
+                }
+                
+                console.log('📈 Charts updated with real data');
+            } catch (error) {
+                console.error('Failed to update charts with real data:', error);
+                console.log('📈 Charts remain with empty state');
+            }
+        }
+
+        // Fetch analytics data from API
+        async function fetchAnalyticsData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/analytics/charts`);
+                if (response.ok) {
+                    return await response.json();
+                }
+                throw new Error('Failed to fetch analytics data');
+            } catch (error) {
+                console.error('Error fetching analytics data:', error);
+                return null;
+            }
         }
 
         // Export functions
@@ -1151,21 +1306,23 @@
             try {
                 console.log('📊 Exporting all dashboard data...');
                 
+                // Try to fetch real data from all endpoints
                 const [overview, topSongs, recentActivity, detailed] = await Promise.all([
-                    fetch(`${API_BASE_URL}/stats/overall`).then(r => r.ok ? r.json() : {}),
-                    fetch(`${API_BASE_URL}/stats/top-songs?limit=50`).then(r => r.ok ? r.json() : []),
-                    fetch(`${API_BASE_URL}/stats/recent-ratings?limit=100`).then(r => r.ok ? r.json() : []),
-                    fetch(`${API_BASE_URL}/stats/detailed`).then(r => r.ok ? r.json() : [])
+                    fetch(`${API_BASE_URL}/stats/overall`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+                    fetch(`${API_BASE_URL}/stats/top-songs?limit=50`).then(r => r.ok ? r.json() : []).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/recent-ratings?limit=100`).then(r => r.ok ? r.json() : []).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/detailed`).then(r => r.ok ? r.json() : []).catch(() => [])
                 ]);
                 
                 const exportData = {
                     exportDate: new Date().toISOString(),
-                    overview,
-                    topSongs,
-                    recentActivity,
-                    detailedAnalytics: detailed,
-                    users: userData,
-                    playlists: playlistData
+                    overview: Object.keys(overview).length > 0 ? overview : { note: "No overview data available" },
+                    topSongs: topSongs.length > 0 ? topSongs : [],
+                    recentActivity: recentActivity.length > 0 ? recentActivity : [],
+                    detailedAnalytics: detailed.length > 0 ? detailed : [],
+                    users: userData.length > 0 ? userData : [],
+                    playlists: playlistData.length > 0 ? playlistData : [],
+                    note: "This export contains real data from your Pania Music Player API. Empty arrays indicate no data is available yet."
                 };
                 
                 const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -1181,69 +1338,8 @@
                 console.log('✅ Complete data exported successfully');
             } catch (error) {
                 console.error('❌ Export failed:', error);
-                alert('Export failed. Please try again.');
+                alert('Export failed. Please check your API connection and try again.');
             }
-        }
-
-        // Mock data generators
-        async function generateMockStats() {
-            return {
-                totalUsers: 1247,
-                totalPlays: 25680,
-                totalPlaylists: 892,
-                activeUsers: 342
-            };
-        }
-
-        async function generateMockUserData() {
-            const users = [];
-            const names = ['Ali', 'Sara', 'Mohammad', 'Fateme', 'Hassan', 'Zahra', 'Reza', 'Maryam', 'Ahmad', 'Leila'];
-            
-            for (let i = 0; i < 50; i++) {
-                users.push({
-                    id: `user_${Math.random().toString(36).substr(2, 9)}`,
-                    username: `${names[i % names.length]}_${i + 1}`,
-                    status: Math.random() > 0.3 ? 'active' : 'inactive',
-                    totalPlays: Math.floor(Math.random() * 1000) + 10,
-                    playlistCount: Math.floor(Math.random() * 15),
-                    lastActive: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                    joinDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString()
-                });
-            }
-            
-            return users.sort((a, b) => new Date(b.lastActive) - new Date(a.lastActive));
-        }
-
-        async function generateMockPlaylistData() {
-            const playlists = [];
-            const playlistNames = ['My Favorites', 'Chill Vibes', 'Classical Poetry', 'Modern Songs', 'Road Trip Mix'];
-            
-            for (let i = 0; i < 100; i++) {
-                const user = userData[Math.floor(Math.random() * userData.length)];
-                playlists.push({
-                    id: `playlist_${Math.random().toString(36).substr(2, 9)}`,
-                    name: `${playlistNames[i % playlistNames.length]} ${i + 1}`,
-                    userId: user.id,
-                    username: user.username,
-                    songCount: Math.floor(Math.random() * 50) + 1,
-                    created: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString(),
-                    lastModified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-                });
-            }
-            
-            return playlists.sort((a, b) => b.songCount - a.songCount);
-        }
-
-        async function generateMockTopSongs() {
-            const songs = [
-                { title: 'سایه روشن', poet: 'فریدون مشیری', plays: 2340, uniqueListeners: 1890, avgRating: 4.8 },
-                { title: 'آب و آتش', poet: 'احمد شاملو', plays: 2156, uniqueListeners: 1654, avgRating: 4.7 },
-                { title: 'گل یاس', poet: 'محمد علی بهمنی', plays: 1987, uniqueListeners: 1523, avgRating: 4.6 },
-                { title: 'باران عشق', poet: 'سهراب سپهری', plays: 1834, uniqueListeners: 1445, avgRating: 4.9 },
-                { title: 'ستاره شب', poet: 'فروغ فرخزاد', plays: 1723, uniqueListeners: 1389, avgRating: 4.5 }
-            ];
-            
-            return songs;
         }
 
         // Utility functions
