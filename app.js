@@ -639,3 +639,155 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// Enhanced dislike functionality
+async function rateSong(rating) {
+    const currentSong = getCurrentSongData(); // Get current song info
+    
+    try {
+        if (rating === 'dislike') {
+            // 1. Immediately skip to next song
+            skipToNextSong();
+            
+            // 2. Add to user's blacklist
+            await addToBlacklist(currentSong.id);
+            
+            // 3. Record the dislike rating
+            await recordRating(currentSong.id, 'dislike');
+            
+            // 4. Show feedback to user
+            showToast('این شعر از پلی لیست شما حذف شد و دیگر پخش نخواهد شد', 'success');
+            
+        } else if (rating === 'like') {
+            // Just record the like
+            await recordRating(currentSong.id, 'like');
+            showToast('شعر به لیست مورد علاقه‌های شما اضافه شد!', 'success');
+        }
+        
+        // Update UI to reflect the rating
+        updateRatingUI(rating);
+        
+    } catch (error) {
+        console.error('Rating error:', error);
+        showToast('خطا در ثبت امتیاز', 'error');
+    }
+}
+
+// Skip to next song immediately
+function skipToNextSong() {
+    const audio = document.getElementById('audio');
+    
+    // Stop current audio
+    audio.pause();
+    audio.currentTime = 0;
+    
+    // Load next song
+    loadNextSong();
+    
+    // Add visual feedback
+    document.getElementById('lyrics').classList.add('loading');
+    document.getElementById('title').classList.add('loading');
+}
+
+// Add song to user's permanent blacklist
+async function addToBlacklist(songId) {
+    const userId = getUserId(); // Get current user ID
+    
+    try {
+        // Store in local storage for immediate effect
+        let blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
+        if (!blacklist.includes(songId)) {
+            blacklist.push(songId);
+            localStorage.setItem('blacklistedSongs', JSON.stringify(blacklist));
+        }
+        
+        // Also send to server for persistence across devices
+        const response = await fetch('/api/blacklist', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId: userId,
+                songId: songId,
+                action: 'add'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to update server blacklist');
+        }
+        
+    } catch (error) {
+        console.error('Error adding to blacklist:', error);
+        // Even if server fails, local storage will work
+    }
+}
+
+// Check if song is blacklisted before playing
+function isSongBlacklisted(songId) {
+    const blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
+    return blacklist.includes(songId);
+}
+
+// Filter out blacklisted songs when getting next song
+async function getNextSong() {
+    let attempts = 0;
+    const maxAttempts = 10; // Prevent infinite loop
+    
+    while (attempts < maxAttempts) {
+        const song = await fetchRandomSong(); // Your existing function
+        
+        if (!isSongBlacklisted(song.id)) {
+            return song;
+        }
+        
+        attempts++;
+    }
+    
+    // If all songs seem blacklisted, you might want to:
+    // 1. Show a message about refreshing recommendations
+    // 2. Temporarily ignore blacklist
+    // 3. Suggest user to clear some dislikes
+    
+    showToast('تمام شعرهای پیشنهادی قبلاً نپسندیده شده‌اند. در حال تازه‌سازی...', 'info');
+    return await fetchRandomSong(); // Return anyway
+}
+
+// Updated button text and styling for better UX
+function updateDislikeButton() {
+    const dislikeBtn = document.getElementById('dislikeBtn');
+    dislikeBtn.innerHTML = '⏭️ رد کردن'; // Skip icon + text
+    dislikeBtn.title = 'این شعر را رد کن و دیگر پخش نکن';
+}
+
+// Show user how many songs they've disliked (optional)
+function updateUserStats() {
+    const blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
+    const userStatus = document.getElementById('userStatus');
+    
+    if (blacklist.length > 0) {
+        userStatus.textContent = `${blacklist.length} شعر نپسندیده`;
+    }
+}
+
+// Option to manage blacklisted songs
+function showBlacklistManager() {
+    const blacklist = JSON.parse(localStorage.getItem('blacklistedSongs') || '[]');
+    
+    // You could add this to the playlist modal or create a separate modal
+    // Allow users to remove songs from blacklist if they change their mind
+}
+
+// Initialize the enhanced functionality
+document.addEventListener('DOMContentLoaded', function() {
+    updateDislikeButton();
+    updateUserStats();
+    
+    // You might also want to add a keyboard shortcut
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' || e.key === 's') {
+            rateSong('dislike'); // Skip with right arrow or 's' key
+        }
+    });
+});
