@@ -177,6 +177,7 @@
             transition: all 0.3s ease;
             color: white;
             min-width: 120px;
+            position: relative;
         }
 
         .like-btn {
@@ -185,6 +186,41 @@
 
         .dislike-btn {
             background: linear-gradient(45deg, #e74c3c, #ff6b6b);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Enhanced dislike/skip button */
+        .dislike-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .dislike-btn:hover::before {
+            left: 100%;
+        }
+
+        .dislike-btn .btn-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .dislike-btn .skip-icon {
+            font-size: 1.2em;
+            animation: slideRight 2s ease-in-out infinite;
+        }
+
+        @keyframes slideRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(3px); }
         }
 
         .playlist-add-btn {
@@ -198,6 +234,75 @@
         .action-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Tooltip for better UX */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* Feedback animation */
+        .btn-feedback {
+            animation: feedbackPulse 0.6s ease;
+        }
+
+        @keyframes feedbackPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Skip confirmation overlay */
+        .skip-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(231, 76, 60, 0.95);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 2000;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .skip-overlay.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .skip-overlay .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
         }
 
         #lyrics {
@@ -522,15 +627,34 @@
             </div>
         </div>
     </div>
+
+    <!-- Skip confirmation overlay -->
+    <div class="skip-overlay" id="skipOverlay">
+        <span class="icon">⏭️</span>
+        <div>شعر رد شد و دیگر پخش نخواهد شد</div>
+    </div>
     
     <div class="content">
         <h1 id="title" class="loading">در حال بارگذاری...</h1>
         <h2 id="poet"></h2>
         
         <div class="action-buttons">
-            <button class="action-btn like-btn" id="likeBtn" onclick="rateSong('like')">👍 پسندیدم</button>
-            <button class="action-btn playlist-add-btn" id="playlistAddBtn" onclick="togglePlaylistSong()">➕ افزودن</button>
-            <button class="action-btn dislike-btn" id="dislikeBtn" onclick="rateSong('dislike')">👎 نپسندیدم</button>
+            <button class="action-btn like-btn tooltip" id="likeBtn" 
+                    data-tooltip="این شعر را پسندیدم"
+                    onclick="rateSong('like')">👍 پسندیدم</button>
+            
+            <button class="action-btn playlist-add-btn tooltip" id="playlistAddBtn" 
+                    data-tooltip="به پلی لیست اضافه کن"
+                    onclick="togglePlaylistSong()">➕ افزودن</button>
+            
+            <button class="action-btn dislike-btn tooltip" id="dislikeBtn" 
+                    data-tooltip="رد کن و دیگر پخش نکن" 
+                    onclick="rateSong('dislike')">
+                <span class="btn-text">
+                    <span class="skip-icon">⏭️</span>
+                    <span>رد کردن</span>
+                </span>
+            </button>
         </div>
         
         <div id="lyrics" class="loading">در حال بارگذاری اشعار...</div>
