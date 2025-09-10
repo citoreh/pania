@@ -1045,57 +1045,78 @@
             }
         }
 
-        async function displayPlaylist() {
-            const content = document.getElementById('playlistContent');
-            content.innerHTML = '<div class="loading">در حال بارگذاری...</div>';
-            
-            log('📋 Displaying playlist...');
+async function displayPlaylist() {
+    const content = document.getElementById('playlistContent');
+    content.innerHTML = '<div class="loading">در حال بارگذاری...</div>';
+    
+    log('📋 Displaying playlist...');
 
-            try {
-                const playlist = await fetchFromAPI(`/get-playlist?userId=${telegramUser.id}`);
-                userPlaylist = playlist || [];
+    if (!telegramUser || !telegramUser.id) {
+        log('❌ No user ID available');
+        content.innerHTML = `
+            <div class="error">
+                خطا: شناسه کاربر یافت نشد<br>
+                <small>No user ID available</small>
+            </div>
+        `;
+        return;
+    }
 
-                log(`📋 Retrieved ${userPlaylist.length} songs for display`);
+    try {
+        // Properly encode the userId parameter
+        const encodedUserId = encodeURIComponent(telegramUser.id.toString());
+        const endpoint = `/get-playlist?userId=${encodedUserId}`;
+        
+        log(`📋 Fetching playlist from: ${endpoint}`);
+        
+        const playlist = await fetchFromAPI(endpoint);
+        userPlaylist = playlist || [];
 
-                if (userPlaylist.length === 0) {
-                    content.innerHTML = `
-                        <div class="empty-playlist">
-                            <div class="icon">🎵</div>
-                            <h3>پلی لیست شما خالی است</h3>
-                            <p>آهنگ‌های مورد علاقه خود را اضافه کنید</p>
-                            <small style="color: #999; margin-top: 10px; display: block;">
-                                Debug: User ID = ${telegramUser.id}
-                            </small>
-                        </div>
-                    `;
-                    return;
-                }
+        log(`📋 Retrieved ${userPlaylist.length} songs for display`);
 
-                content.innerHTML = userPlaylist.map(song => `
-                    <div class="playlist-item" onclick="playFromPlaylist('${song.id}')">
-                        <div>
-                            <h4>${song.title}</h4>
-                            <p>شاعر: ${song.poet || 'نامشخص'}</p>
-                            <small style="color: #999;">ID: ${song.id}</small>
-                        </div>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <button class="remove-btn" onclick="event.stopPropagation(); removeFromPlaylist('${song.id}')">حذف</button>
-                        </div>
-                    </div>
-                `).join('');
-
-                log(`✅ Playlist displayed with ${userPlaylist.length} songs`);
-
-            } catch (error) {
-                log(`❌ Failed to display playlist: ${error.message}`);
-                content.innerHTML = `
-                    <div class="error">
-                        خطا در بارگذاری پلی لیست<br>
-                        <small>Error: ${error.message}</small>
-                    </div>
-                `;
-            }
+        if (userPlaylist.length === 0) {
+            content.innerHTML = `
+                <div class="empty-playlist">
+                    <div class="icon">🎵</div>
+                    <h3>پلی لیست شما خالی است</h3>
+                    <p>آهنگ‌های مورد علاقه خود را اضافه کنید</p>
+                    <small style="color: #999; margin-top: 10px; display: block;">
+                        Debug: User ID = ${telegramUser.id}
+                    </small>
+                </div>
+            `;
+            return;
         }
+
+        content.innerHTML = userPlaylist.map(song => `
+            <div class="playlist-item" onclick="playFromPlaylist('${song.id}')">
+                <div>
+                    <h4>${song.title}</h4>
+                    <p>شاعر: ${song.poet || 'نامشخص'}</p>
+                    <small style="color: #999;">ID: ${song.id}</small>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="remove-btn" onclick="event.stopPropagation(); removeFromPlaylist('${song.id}')">حذف</button>
+                </div>
+            </div>
+        `).join('');
+
+        log(`✅ Playlist displayed with ${userPlaylist.length} songs`);
+
+    } catch (error) {
+        log(`❌ Failed to display playlist: ${error.message}`);
+        console.error('Playlist error details:', error);
+        
+        content.innerHTML = `
+            <div class="error">
+                خطا در بارگذاری پلی لیست<br>
+                <small>Error: ${error.message}</small><br>
+                <small>Endpoint: /get-playlist?userId=${telegramUser.id}</small><br>
+                <small>Status: ${error.status || 'Unknown'}</small>
+            </div>
+        `;
+    }
+}
 
         async function playFromPlaylist(songId) {
             const song = userPlaylist.find(s => s.id === songId);
