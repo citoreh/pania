@@ -1380,14 +1380,13 @@ async function displayPlaylist() {
             }, 1000);
             
             // Test API connection
-            setTimeout(() => {
-                sendToAPI('/health', { test: true }).then(() => {
-                    log('✅ API health check passed');
-                }).catch(() => {
-                    log('❌ API health check failed');
-                });
-            }, 2000);
-        });
+setTimeout(() => {
+    fetchFromAPI('/health').then(() => {
+        log('✅ API health check passed');
+    }).catch(() => {
+        log('❌ API health check failed');
+    });
+}, 2000);
 
         // Close modal when clicking outside
         playlistModal.addEventListener('click', (e) => {
