@@ -161,12 +161,20 @@
             gap: 25px;
         }
 
-        .chart-container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
+.chart-container {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    position: relative;
+    height: 300px; /* Fixed height */
+}
+
+.chart-container canvas {
+    max-height: 250px !important;
+    width: 100% !important;
+    height: 250px !important;
+}
 
         .chart-title {
             font-size: 1.2rem;
