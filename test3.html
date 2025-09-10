@@ -136,40 +136,6 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-        .click-hint {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 1rem;
-    opacity: 0.7;
-    animation: clickHint 2s ease-in-out infinite;
-    z-index: 10;
-}
-
-@keyframes clickHint {
-    0%, 100% { transform: translateX(-50%) translateY(0px); opacity: 0.7; }
-    50% { transform: translateX(-50%) translateY(-10px); opacity: 1; }
-}
-
-.toast {
-    position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 15px 25px;
-    border-radius: 25px;
-    z-index: 2000;
-    transition: all 0.3s ease;
-    opacity: 0;
-}
-
-.toast.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-}
     </style>
 </head>
 <body>
@@ -187,8 +153,7 @@
         
         <div id="lyrics" class="loading">در حال بارگذاری اشعار...</div>
     </div>
-    <div id="click-hint" class="click-hint" style="display: none;">برای شروع پخش، صفحه را لمس کنید</div>
-<div class="toast" id="toast"></div>
+    
     <audio id="audio" preload="auto"></audio>
 
     <script>
