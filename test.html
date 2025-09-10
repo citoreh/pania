@@ -4,10 +4,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <h1>Test</h1>
+    <div id="result">Testing...</div>
     <script>
-        console.log('Script loaded');
-        console.log('Papa:', typeof Papa);
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRH5QP9XuvvqLrbzaQ0rV9WfSVHYOBKQgJZUTzTQeSpzyUSQbSxIkJUlPFc67K8k2aIDuB5mcPrjHMU/pub?output=csv';
+        
+        Papa.parse(csvUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                document.getElementById('result').innerHTML = `
+                    Loaded ${results.data.length} rows<br>
+                    Columns: ${results.meta.fields.join(', ')}<br>
+                    First song: ${results.data[0] ? results.data[0].title : 'None'}
+                `;
+            },
+            error: function(error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        });
     </script>
 </body>
 </html>
