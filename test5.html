@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pania Music Player V5</title>
+    <title>Pania Music Player V5 - Debug</title>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
@@ -33,6 +33,97 @@
             100% { background-position: 0% 50%; }
         }
 
+        /* Debug Panel */
+        .debug-toggle {
+            position: fixed;
+            bottom: 220px;
+            right: 10px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1001;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .debug-toggle:hover {
+            background: rgba(255, 0, 0, 1);
+        }
+
+        .debug-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            max-width: 350px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            font-family: 'Courier New', monospace;
+            line-height: 1.3;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .debug-panel h4 {
+            color: #4CAF50;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            border-bottom: 1px solid rgba(76, 175, 80, 0.3);
+            padding-bottom: 4px;
+        }
+
+        .debug-section {
+            margin-bottom: 12px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .debug-section strong {
+            color: #FFC107;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .debug-log {
+            max-height: 120px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px;
+            border-radius: 4px;
+        }
+
+        .debug-log-entry {
+            margin-bottom: 2px;
+            font-size: 0.7rem;
+        }
+
+        .debug-log-entry.success { color: #4CAF50; }
+        .debug-log-entry.error { color: #f44336; }
+        .debug-log-entry.warning { color: #FF9800; }
+        .debug-log-entry.info { color: #2196F3; }
+
+        .debug-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .debug-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .debug-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
         /* Top Bar */
         .top-bar {
             position: fixed;
@@ -55,6 +146,18 @@
             gap: 10px;
             color: white;
             font-size: 0.9rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
         }
 
         .playlist-btn {
@@ -409,13 +512,51 @@
             .playlist-item-actions {
                 justify-content: center;
             }
+
+            .debug-panel {
+                bottom: 5px;
+                right: 5px;
+                max-width: 280px;
+                font-size: 0.7rem;
+                max-height: 250px;
+            }
+
+            .debug-toggle {
+                bottom: 180px;
+                right: 5px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Debug Toggle -->
+    <button class="debug-toggle" onclick="toggleDebug()">Debug</button>
+    
+    <!-- Debug Panel -->
+    <div class="debug-panel" id="debugPanel" style="display: none;">
+        <h4>🔍 Debug Panel</h4>
+        
+        <div class="debug-section">
+            <strong>System Status:</strong>
+            <div>User ID: <span id="debugUserId">-</span></div>
+            <div>Current Song: <span id="debugCurrentSong">-</span></div>
+            <div>Playlist Length: <span id="debugPlaylistLength">-</span></div>
+            <div>User Playlist: <span id="debugUserPlaylist">-</span></div>
+            <div>API Status: <span id="debugApiStatus">-</span></div>
+        </div>
+
+        <div class="debug-section">
+            <strong>Recent Activity:</strong>
+            <div class="debug-log" id="debugLog">
+                <div class="debug-log-entry info">Debug panel initialized</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Top Bar -->
     <div class="top-bar">
         <div class="user-info">
+            <div class="user-avatar" id="userAvatar">👤</div>
             <span id="userName">کاربر آزمایشی</span>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
@@ -472,19 +613,66 @@
         const playlistAddBtn = document.getElementById('playlistAddBtn');
         const playlistModal = document.getElementById('playlistModal');
         const userNameEl = document.getElementById('userName');
+        const userAvatarEl = document.getElementById('userAvatar');
 
         // Global variables
         let playlist = [];
         let currentIndex = 0;
         let currentSong = null;
         let userPlaylist = [];
+        let debugLog = [];
+        let apiCallCount = 0;
         let telegramUser = {
             id: 'demo_user_' + Math.random().toString(36).substr(2, 5),
             first_name: 'کاربر آزمایشی'
         };
 
-        // API Functions
+        // Debug Functions
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = { timestamp, message, type };
+            debugLog.push(logEntry);
+            
+            // Keep only last 20 entries
+            if (debugLog.length > 20) debugLog.shift();
+            
+            updateDebugPanel();
+            console.log(`🎵 PANIA [${type.toUpperCase()}]:`, message);
+        }
+
+        function toggleDebug() {
+            const panel = document.getElementById('debugPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            if (panel.style.display === 'block') {
+                updateDebugPanel();
+            }
+        }
+
+        function updateDebugPanel() {
+            // Update status information
+            document.getElementById('debugUserId').textContent = telegramUser ? telegramUser.id : 'None';
+            document.getElementById('debugCurrentSong').textContent = currentSong ? currentSong.title : 'None';
+            document.getElementById('debugPlaylistLength').textContent = playlist.length;
+            document.getElementById('debugUserPlaylist').textContent = userPlaylist.length + ' songs';
+            document.getElementById('debugApiStatus').textContent = apiCallCount + ' calls made';
+
+            // Update recent activity log
+            const logContainer = document.getElementById('debugLog');
+            if (logContainer) {
+                logContainer.innerHTML = debugLog.map(entry => 
+                    `<div class="debug-log-entry ${entry.type}">${entry.timestamp}: ${entry.message}</div>`
+                ).join('');
+                
+                // Scroll to bottom
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+        }
+
+        // API Functions with enhanced logging
         async function fetchFromAPI(endpoint) {
+            apiCallCount++;
+            log(`📥 API GET: ${endpoint}`, 'info');
+            
             try {
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                     method: 'GET',
@@ -495,17 +683,24 @@
                 
                 if (response.ok) {
                     updateAPIStatus(true);
-                    return await response.json();
+                    const result = await response.json();
+                    log(`✅ API GET Success: ${endpoint}`, 'success');
+                    return result;
                 } else {
+                    log(`❌ API GET Error: ${endpoint} - ${response.status}`, 'error');
                     throw new Error(`API Error: ${response.status}`);
                 }
             } catch (error) {
                 updateAPIStatus(false);
+                log(`💥 API GET Failed: ${endpoint} - ${error.message}`, 'error');
                 throw error;
             }
         }
 
         async function sendToAPI(endpoint, data) {
+            apiCallCount++;
+            log(`📤 API POST: ${endpoint}`, 'info');
+            
             try {
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                     method: 'POST',
@@ -517,12 +712,16 @@
                 
                 if (response.ok) {
                     updateAPIStatus(true);
-                    return await response.json();
+                    const result = await response.json();
+                    log(`✅ API POST Success: ${endpoint}`, 'success');
+                    return result;
                 } else {
+                    log(`❌ API POST Error: ${endpoint} - ${response.status}`, 'error');
                     throw new Error(`API Error: ${response.status}`);
                 }
             } catch (error) {
                 updateAPIStatus(false);
+                log(`💥 API POST Failed: ${endpoint} - ${error.message}`, 'error');
                 return null;
             }
         }
@@ -535,6 +734,21 @@
                 apiStatusEl.className = 'api-status offline';
                 apiStatusEl.textContent = '🔴 API Offline';
             }
+            updateDebugPanel();
+        }
+
+        // Initialize user info with enhanced logging
+        function initUser() {
+            log('🚀 Initializing user session', 'info');
+            
+            const displayName = telegramUser.first_name;
+            userNameEl.textContent = displayName;
+            
+            // Create avatar with first letter
+            const firstLetter = telegramUser.first_name ? telegramUser.first_name[0].toUpperCase() : '👤';
+            userAvatarEl.textContent = firstLetter;
+            
+            log(`👤 User initialized: ${displayName} (ID: ${telegramUser.id})`, 'success');
         }
 
         // Toast notifications
@@ -543,6 +757,8 @@
             toast.textContent = message;
             toast.className = `toast ${type} show`;
             
+            log(`📢 Toast: ${message} (${type})`, 'info');
+            
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
@@ -550,13 +766,15 @@
 
         // Playlist Management Functions
         async function loadUserPlaylist() {
+            log(`📋 Loading user playlist for: ${telegramUser.id}`, 'info');
+            
             try {
                 const playlist = await fetchFromAPI(`/get-playlist?userId=${telegramUser.id}`);
                 userPlaylist = Array.isArray(playlist) ? playlist : [];
                 updatePlaylistButton();
-                console.log(`Loaded ${userPlaylist.length} songs from playlist`);
+                log(`✅ Loaded ${userPlaylist.length} songs from playlist`, 'success');
             } catch (error) {
-                console.error('Error loading playlist:', error);
+                log(`❌ Failed to load playlist: ${error.message}`, 'error');
                 userPlaylist = [];
             }
         }
@@ -566,8 +784,10 @@
             
             if (isOpen) {
                 playlistModal.classList.remove('show');
+                log('❌ Playlist modal closed', 'info');
             } else {
                 playlistModal.classList.add('show');
+                log('📋 Playlist modal opened', 'info');
                 await displayPlaylist();
             }
         }
@@ -575,6 +795,8 @@
         async function displayPlaylist() {
             const content = document.getElementById('playlistContent');
             content.innerHTML = '<div class="playlist-loading">در حال بارگذاری...</div>';
+            
+            log('📋 Displaying playlist contents', 'info');
             
             try {
                 const playlist = await fetchFromAPI(`/get-playlist?userId=${telegramUser.id}`);
@@ -588,6 +810,7 @@
                             <p>آهنگ‌های مورد علاقه خود را اضافه کنید</p>
                         </div>
                     `;
+                    log('📋 Playlist is empty', 'warning');
                     return;
                 }
 
@@ -604,8 +827,10 @@
                     </div>
                 `).join('');
 
+                log(`✅ Playlist displayed with ${userPlaylist.length} songs`, 'success');
+
             } catch (error) {
-                console.error('Error displaying playlist:', error);
+                log(`❌ Failed to display playlist: ${error.message}`, 'error');
                 content.innerHTML = `
                     <div class="empty-playlist">
                         <div class="icon">❌</div>
@@ -619,9 +844,12 @@
         async function playFromPlaylist(songId) {
             const song = userPlaylist.find(s => s.id === songId);
             if (!song) {
+                log(`❌ Song not found in playlist: ${songId}`, 'error');
                 showToast('آهنگ یافت نشد!', 'error');
                 return;
             }
+
+            log(`▶️ Playing from playlist: ${song.title} (ID: ${songId})`, 'info');
 
             // Close playlist modal
             playlistModal.classList.remove('show');
@@ -634,13 +862,16 @@
                 await audio.play();
                 updateDisplay(song);
                 showToast(`در حال پخش: ${song.title}`, 'success');
+                log(`✅ Successfully playing: ${song.title}`, 'success');
             } catch (error) {
-                console.error('Error playing song:', error);
+                log(`❌ Failed to play song: ${error.message}`, 'error');
                 showToast('خطا در پخش آهنگ!', 'error');
             }
         }
 
         async function removeFromPlaylist(songId) {
+            log(`🗑️ Removing song from playlist: ${songId}`, 'info');
+            
             try {
                 const result = await sendToAPI('/remove-from-playlist', {
                     userId: telegramUser.id.toString(),
@@ -652,11 +883,13 @@
                     await displayPlaylist();
                     updatePlaylistButton();
                     showToast('از پلی لیست حذف شد!', 'success');
+                    log(`✅ Successfully removed: ${songId}`, 'success');
                 } else {
+                    log(`❌ Failed to remove: ${songId}`, 'error');
                     showToast('خطا در حذف از پلی لیست!', 'error');
                 }
             } catch (error) {
-                console.error('Error removing from playlist:', error);
+                log(`💥 Error removing from playlist: ${error.message}`, 'error');
                 showToast('خطا در حذف از پلی لیست!', 'error');
             }
         }
@@ -675,13 +908,16 @@
                 playlistAddBtn.classList.remove('added');
                 playlistAddBtn.title = 'افزودن به پلی لیست';
             }
+            
+            log(`🔘 Playlist button updated: ${isInPlaylist ? 'in playlist' : 'not in playlist'}`, 'info');
         }
 
         // Music Functions
         async function rateSong(type) {
-            console.log('rateSong called with:', type);
+            log(`${type === 'like' ? '👍' : '👎'} Rating song: ${type}`, 'info');
+            
             if (!currentSong || !currentSong.title) {
-                console.log('No current song to rate');
+                log('⚠️ No current song to rate', 'warning');
                 showToast('هیچ آهنگی در حال پخش نیست!', 'error');
                 return;
             }
@@ -706,19 +942,21 @@
             
             const result = await sendToAPI('/rate-song', data);
             if (result) {
-                console.log(`Song ${type}d successfully`);
+                log(`✅ Song ${type}d successfully`, 'success');
             }
         }
 
         async function togglePlaylistSong() {
-            console.log('togglePlaylistSong called');
+            log('🔄 Toggle playlist song action', 'info');
+            
             if (!currentSong || !currentSong.title) {
-                console.log('No current song to add to playlist');
+                log('⚠️ No current song to add to playlist', 'warning');
                 showToast('هیچ آهنگی در حال پخش نیست!', 'error');
                 return;
             }
 
             if (!currentSong.id) {
+                log('❌ No song ID found', 'error');
                 showToast('خطا: شناسه آهنگ یافت نشد!', 'error');
                 return;
             }
@@ -726,8 +964,11 @@
             const songId = currentSong.id;
             const isInPlaylist = userPlaylist.some(song => song.id === songId);
 
+            log(`🔄 Toggle playlist: ${currentSong.title} (ID: ${songId}) - Currently in playlist: ${isInPlaylist}`, 'info');
+
             if (isInPlaylist) {
                 // Remove from playlist
+                log('🗑️ Removing from playlist', 'info');
                 const result = await sendToAPI('/remove-from-playlist', {
                     userId: telegramUser.id.toString(),
                     songId: songId
@@ -737,11 +978,14 @@
                     userPlaylist = userPlaylist.filter(song => song.id !== songId);
                     updatePlaylistButton();
                     showToast('از پلی لیست حذف شد!', 'success');
+                    log('✅ Successfully removed from playlist', 'success');
                 } else {
+                    log('❌ Failed to remove from playlist', 'error');
                     showToast('خطا در حذف از پلی لیست!', 'error');
                 }
             } else {
                 // Add to playlist
+                log('➕ Adding to playlist', 'info');
                 const data = {
                     userId: telegramUser.id.toString(),
                     songId: currentSong.id,
@@ -758,7 +1002,9 @@
                     userPlaylist.push(currentSong);
                     updatePlaylistButton();
                     showToast('به پلی لیست اضافه شد!', 'success');
+                    log('✅ Successfully added to playlist', 'success');
                 } else {
+                    log('❌ Failed to add to playlist', 'error');
                     showToast('خطا در افزودن به پلی لیست!', 'error');
                 }
             }
@@ -776,6 +1022,8 @@
             
             // Update playlist button
             updatePlaylistButton();
+            
+            log(`🎵 Display updated: ${song.title} (ID: ${song.id || 'NO ID'})`, 'success');
         }
 
         function playNext() {
@@ -783,10 +1031,11 @@
             const song = playlist[currentIndex];
             audio.src = song.url;
             audio.play().catch(e => {
-                console.error('Playback error:', e);
+                log(`❌ Playback error: ${e.message}`, 'error');
                 setTimeout(playNext, 1000);
             });
             updateDisplay(song);
+            log(`⏭️ Playing next song: ${song.title}`, 'info');
         }
 
         // Event listeners
@@ -796,13 +1045,15 @@
         document.body.addEventListener('click', (e) => {
             // Don't trigger auto-play when clicking on buttons or modals
             if (e.target.closest('.action-btn') || e.target.closest('.api-status') || 
-                e.target.closest('.top-bar') || e.target.closest('.modal')) {
+                e.target.closest('.top-bar') || e.target.closest('.modal') || 
+                e.target.closest('.debug-panel') || e.target.closest('.debug-toggle')) {
                 return;
             }
             
             if (audio.paused && playlist.length > 0) {
-                audio.play().catch(e => console.error('Initial playbook failed:', e));
+                audio.play().catch(e => log(`❌ Initial playback failed: ${e.message}`, 'error'));
                 clickHintEl.style.display = 'none';
+                log('▶️ User initiated playback', 'info');
             }
         }, { once: true });
 
@@ -815,17 +1066,17 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('Starting initialization...');
+            log('🚀 Starting application initialization', 'info');
             
-            // Update user info
-            userNameEl.textContent = telegramUser.first_name;
+            // Initialize user
+            initUser();
             
             // Test API connection
             setTimeout(() => {
                 fetchFromAPI('/health').then(() => {
-                    console.log('API health check passed');
+                    log('✅ API health check passed', 'success');
                 }).catch(() => {
-                    console.log('API health check failed');
+                    log('❌ API health check failed', 'error');
                 });
             }, 1000);
 
@@ -835,12 +1086,13 @@
             }, 1500);
             
             // Load CSV
+            log('📊 Starting CSV download', 'info');
             Papa.parse(csvUrl, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    console.log('CSV loaded:', results.data.length, 'rows');
+                    log(`📊 CSV loaded: ${results.data.length} rows`, 'success');
                     
                     const songs = results.data
                         .map(row => ({
@@ -852,13 +1104,14 @@
                         }))
                         .filter(song => song.url && song.title && song.url.startsWith('http'));
 
-                    console.log('Valid songs found:', songs.length);
+                    log(`🎵 Valid songs found: ${songs.length}`, 'success');
 
                     if (songs.length === 0) {
                         titleEl.textContent = 'خطا';
                         titleEl.classList.remove('loading');
                         lyricsEl.textContent = 'هیچ آهنگ معتبری یافت نشد';
                         lyricsEl.classList.remove('loading');
+                        log('❌ No valid songs found', 'error');
                         return;
                     }
 
@@ -869,14 +1122,14 @@
                     
                     // Try to play, but handle autoplay restrictions
                     audio.play().catch(e => {
-                        console.log('Autoplay blocked - showing click hint');
+                        log('⚠️ Autoplay blocked - showing click hint', 'warning');
                         clickHintEl.style.display = 'block';
                     });
                     
-                    console.log('Player initialized successfully');
+                    log(`✅ Player initialized with ${playlist.length} songs`, 'success');
                 },
                 error: function(error) {
-                    console.error('Error loading CSV:', error);
+                    log(`❌ CSV loading failed: ${error.message}`, 'error');
                     titleEl.textContent = 'خطا در بارگذاری';
                     titleEl.classList.remove('loading');
                     lyricsEl.textContent = 'خطا در بارگذاری CSV';
