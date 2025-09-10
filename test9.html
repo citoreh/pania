@@ -1115,8 +1115,14 @@
                         return;
                     }
 
-                    // Shuffle playlist to avoid consecutive duplicates
-                    playlist = shuffleNoConsecutiveDuplicates(songs);
+                    // Simple shuffle directly here
+                    log('🔀 Shuffling playlist...', 'info');
+                    for (let i = songs.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [songs[i], songs[j]] = [songs[j], songs[i]];
+                    }
+                    
+                    playlist = songs;
                     log(`🔀 Playlist shuffled with ${playlist.length} songs`, 'success');
                     
                     // Start with first song from shuffled playlist
