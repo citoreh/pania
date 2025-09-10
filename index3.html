@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pania ::</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            color: white;
+            text-align: center;
+            direction: rtl;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #a8e6cf, #ffd93d);
+            background-size: 400% 400%;
+            animation: gradientFlow 8s ease infinite;
+            padding: 80px 20px 20px;
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 100% 0%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .user-status {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            color: #a8e6cf;
+        }
+
+        .telegram-badge {
+            background: linear-gradient(45deg, #0088cc, #229ed9);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 0.6rem;
+            margin-left: 6px;
+            font-weight: bold;
+        }
+
+        .top-bar-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .playlist-btn, .debug-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .debug-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            padding: 6px 12px;
+            font-size: 0.7rem;
+        }
+
+        .playlist-btn:hover, .debug-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #title {
+            font-size: clamp(2rem, 8vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        #poet {
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            font-weight: 400;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            min-width: 120px;
+            position: relative;
+        }
+
+        .like-btn {
+            background: linear-gradient(45deg, #00b894, #55efc4);
+        }
+
+        .dislike-btn {
+            background: linear-gradient(45deg, #e74c3c, #ff6b6b);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Enhanced dislike/skip button */
+        .dislike-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .dislike-btn:hover::before {
+            left: 100%;
+        }
+
+        .dislike-btn .btn-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .dislike-btn .skip-icon {
+            font-size: 1.2em;
+            animation: slideRight 2s ease-in-out infinite;
+        }
+
+        @keyframes slideRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(3px); }
+        }
+
+        .playlist-add-btn {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        }
+
+        .playlist-add-btn.added {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Tooltip for better UX */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* Feedback animation */
+        .btn-feedback {
+            animation: feedbackPulse 0.6s ease;
+        }
+
+        @keyframes feedbackPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Skip confirmation overlay */
+        .skip-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(231, 76, 60, 0.95);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 2000;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .skip-overlay.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .skip-overlay .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        #lyrics {
+            font-size: clamp(1rem, 3vw, 1.4rem);
+            line-height: 1.8;
+            white-space: pre-wrap;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+
+        #lyrics::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #lyrics::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        #lyrics::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        #audio {
+            display: none;
+        }
+
+        .api-status {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .api-status.online {
+            background: rgba(0, 184, 148, 0.3);
+            color: #55efc4;
+        }
+
+        .api-status.offline {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff6b6b;
+        }
+
+        .click-hint {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            opacity: 0.7;
+            animation: clickHint 2s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        @keyframes clickHint {
+            0%, 100% { transform: translateX(-50%) translateY(0px); opacity: 0.7; }
+            50% { transform: translateX(-50%) translateY(-10px); opacity: 1; }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            z-index: 2000;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: rgba(0, 184, 148, 0.8);
+        }
+
+        .toast.error {
+            background: rgba(231, 76, 60, 0.8);
+        }
+
+        .loading {
+            animation: loadingPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Playlist Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #333;
+            direction: rtl;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .modal-header h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .playlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .playlist-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .playlist-item h4 {
+            color: #2d3748;
+            font-size: 1rem;
+            margin-bottom: 3px;
+        }
+
+        .playlist-item p {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .playlist-item-info {
+            flex-grow: 1;
+            text-align: right;
+        }
+
+        .playlist-item-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .play-btn, .remove-btn {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .play-btn {
+            background: linear-gradient(45deg, #00b894, #00cec9);
+        }
+
+        .remove-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+
+        .play-all-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .play-btn:hover, .remove-btn:hover, .play-all-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .empty-playlist {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
+
+        .empty-playlist .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .playlist-loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+            
+            .content {
+                padding: 10px;
+            }
+
+            .top-bar {
+                padding: 10px 15px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .user-info {
+                font-size: 0.8rem;
+            }
+
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+            }
+
+            .modal-content {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .playlist-item {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .playlist-item-actions {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-details">
+                <div class="user-name" id="userName">در حال بارگذاری...</div>
+                <div class="user-status" id="userStatus">در حال اتصال...</div>
+            </div>
+        </div>
+        <div class="top-bar-controls">
+            <div class="api-status offline" id="apiStatus">🔴 API Offline</div>
+            <button class="playlist-btn" onclick="togglePlaylist()">🎵 پلی لیست من</button>
+        </div>
+    </div>
+
+    <!-- Playlist Modal -->
+    <div class="modal" id="playlistModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎵 پلی لیست من</h2>
+                <button class="close-btn" onclick="togglePlaylist()">×</button>
+            </div>
+            <div id="playlistContent">
+                <div class="playlist-loading">در حال بارگذاری پلی لیست...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skip confirmation overlay -->
+    <div class="skip-overlay" id="skipOverlay">
+        <span class="icon">⏭️</span>
+        <div>شعر رد شد و دیگر پخش نخواهد شد</div>
+    </div>
+    
+    <div class="content">
+        <h1 id="title" class="loading">در حال بارگذاری...</h1>
+        <h2 id="poet"></h2>
+        
+        <div class="action-buttons">
+            <button class="action-btn like-btn tooltip" id="likeBtn" 
+                    data-tooltip="این شعر را پسندیدم"
+                    onclick="rateSong('like')">👍 پسندیدم</button>
+            
+            <button class="action-btn playlist-add-btn tooltip" id="playlistAddBtn" 
+                    data-tooltip="به پلی لیست اضافه کن"
+                    onclick="togglePlaylistSong()">➕ افزودن</button>
+            
+            <button class="action-btn dislike-btn tooltip" id="dislikeBtn" 
+                    data-tooltip="رد کن و دیگر پخش نکن" 
+                    onclick="rateSong('dislike')">
+                <span class="btn-text">
+                    <span class="skip-icon">⏭️</span>
+                    <span>رد کردن</span>
+                </span>
+            </button>
+        </div>
+        
+        <div id="lyrics" class="loading">در حال بارگذاری اشعار...</div>
+    </div>
+    
+    <div id="click-hint" class="click-hint" style="display: none;">برای شروع پخش، صفحه را لمس کنید</div>
+    <div class="toast" id="toast"></div>
+    
+    <audio id="audio" preload="auto"></audio>
+
+    <!-- Load external JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
