@@ -1115,8 +1115,13 @@
                         return;
                     }
 
-                    playlist = songs;
-                    const firstSong = playlist[0];
+                    // Shuffle playlist to avoid consecutive duplicates
+                    playlist = shuffleNoConsecutiveDuplicates(songs);
+                    log(`🔀 Playlist shuffled with ${playlist.length} songs`, 'success');
+                    
+                    // Start with first song from shuffled playlist
+                    currentIndex = 0;
+                    const firstSong = playlist[currentIndex];
                     audio.src = firstSong.url;
                     updateDisplay(firstSong);
                     
@@ -1126,7 +1131,7 @@
                         clickHintEl.style.display = 'block';
                     });
                     
-                    log(`✅ Player initialized with ${playlist.length} songs`, 'success');
+                    log(`✅ Player initialized with shuffled playlist: ${firstSong.title}`, 'success');
                 },
                 error: function(error) {
                     log(`❌ CSV loading failed: ${error.message}`, 'error');
