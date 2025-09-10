@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pania Music Player V5 - Debug</title>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * {
@@ -143,21 +145,58 @@
         .user-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             color: white;
             font-size: 0.9rem;
         }
 
         .user-avatar {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: linear-gradient(45deg, #4ecdc4, #44a08d);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .user-status {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            color: #a8e6cf;
+        }
+
+        .telegram-badge {
+            background: linear-gradient(45deg, #0088cc, #229ed9);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 0.6rem;
+            margin-left: 6px;
+            font-weight: bold;
         }
 
         .playlist-btn {
@@ -498,6 +537,15 @@
                 gap: 10px;
             }
 
+            .user-info {
+                font-size: 0.8rem;
+            }
+
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+            }
+
             .modal-content {
                 padding: 20px;
                 margin: 10px;
@@ -539,6 +587,8 @@
         <div class="debug-section">
             <strong>System Status:</strong>
             <div>User ID: <span id="debugUserId">-</span></div>
+            <div>User Type: <span id="debugUserType">-</span></div>
+            <div>Telegram: <span id="debugTelegram">-</span></div>
             <div>Current Song: <span id="debugCurrentSong">-</span></div>
             <div>Playlist Length: <span id="debugPlaylistLength">-</span></div>
             <div>User Playlist: <span id="debugUserPlaylist">-</span></div>
@@ -557,7 +607,10 @@
     <div class="top-bar">
         <div class="user-info">
             <div class="user-avatar" id="userAvatar">👤</div>
-            <span id="userName">کاربر آزمایشی</span>
+            <div class="user-details">
+                <div class="user-name" id="userName">در حال بارگذاری...</div>
+                <div class="user-status" id="userStatus">در حال اتصال...</div>
+            </div>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
             <div class="api-status offline" id="apiStatus">🔴 API Offline</div>
@@ -613,6 +666,7 @@
         const playlistAddBtn = document.getElementById('playlistAddBtn');
         const playlistModal = document.getElementById('playlistModal');
         const userNameEl = document.getElementById('userName');
+        const userStatusEl = document.getElementById('userStatus');
         const userAvatarEl = document.getElementById('userAvatar');
 
         // Global variables
@@ -622,10 +676,9 @@
         let userPlaylist = [];
         let debugLog = [];
         let apiCallCount = 0;
-        let telegramUser = {
-            id: 'demo_user_' + Math.random().toString(36).substr(2, 5),
-            first_name: 'کاربر آزمایشی'
-        };
+        let telegramUser = null;
+        let isInTelegram = false;
+        let telegramWebApp = null;
 
         // Debug Functions
         function log(message, type = 'info') {
@@ -651,6 +704,8 @@
         function updateDebugPanel() {
             // Update status information
             document.getElementById('debugUserId').textContent = telegramUser ? telegramUser.id : 'None';
+            document.getElementById('debugUserType').textContent = isInTelegram ? 'Telegram User' : 'Demo User';
+            document.getElementById('debugTelegram').textContent = isInTelegram ? 'Available' : 'Not Available';
             document.getElementById('debugCurrentSong').textContent = currentSong ? currentSong.title : 'None';
             document.getElementById('debugPlaylistLength').textContent = playlist.length;
             document.getElementById('debugUserPlaylist').textContent = userPlaylist.length + ' songs';
@@ -666,6 +721,90 @@
                 // Scroll to bottom
                 logContainer.scrollTop = logContainer.scrollHeight;
             }
+        }
+
+        // Enhanced Telegram Integration
+        function initializeTelegram() {
+            log('🚀 Initializing Telegram Web App...', 'info');
+            
+            // Check if Telegram Web App is available
+            if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
+                telegramWebApp = window.Telegram.WebApp;
+                isInTelegram = true;
+                
+                log('✅ Telegram Web App detected', 'success');
+                
+                // Initialize Telegram Web App
+                telegramWebApp.ready();
+                
+                // Set app colors
+                telegramWebApp.setHeaderColor('#667eea');
+                telegramWebApp.setBackgroundColor('#ff6b6b');
+                
+                // Get user data
+                if (telegramWebApp.initDataUnsafe && telegramWebApp.initDataUnsafe.user) {
+                    telegramUser = telegramWebApp.initDataUnsafe.user;
+                    log(`👤 Telegram user found: ${telegramUser.first_name} (ID: ${telegramUser.id})`, 'success');
+                    
+                    // Enable closing confirmation if needed
+                    telegramWebApp.enableClosingConfirmation();
+                    
+                    updateUserInterface(telegramUser, true);
+                } else {
+                    log('⚠️ Telegram user data not available', 'warning');
+                    createDemoUser();
+                }
+            } else {
+                log('⚠️ Telegram Web App not available - running in browser mode', 'warning');
+                isInTelegram = false;
+                createDemoUser();
+            }
+        }
+
+        function createDemoUser() {
+            telegramUser = {
+                id: 'demo_user_' + Math.random().toString(36).substr(2, 5),
+                first_name: 'کاربر آزمایشی',
+                last_name: '',
+                username: 'demo_user',
+                language_code: 'fa',
+                is_demo: true
+            };
+            
+            log(`🔧 Demo user created: ${telegramUser.id}`, 'info');
+            updateUserInterface(telegramUser, false);
+        }
+
+        function updateUserInterface(user, isTelegramUser) {
+            const displayName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+            userNameEl.textContent = displayName;
+            
+            if (isTelegramUser) {
+                userStatusEl.innerHTML = 'کاربر تلگرام <span class="telegram-badge">TG</span>';
+                
+                // Try to load user photo
+                loadTelegramUserPhoto(user);
+            } else {
+                userStatusEl.textContent = 'حالت آزمایشی';
+                
+                // Use first letter as avatar
+                const firstLetter = user.first_name ? user.first_name[0].toUpperCase() : '👤';
+                userAvatarEl.textContent = firstLetter;
+            }
+            
+            log(`👤 User interface updated: ${displayName} (${isTelegramUser ? 'Telegram' : 'Demo'})`, 'success');
+        }
+
+        function loadTelegramUserPhoto(user) {
+            // Create avatar with first letter as fallback
+            const firstLetter = user.first_name ? user.first_name[0].toUpperCase() : '👤';
+            userAvatarEl.textContent = firstLetter;
+            
+            // Try to get photo via Telegram Bot API (if available)
+            // Note: This would require a bot token and backend endpoint
+            // For now, we'll use the first letter but could be enhanced
+            
+            log('📸 Using text avatar (photo loading requires bot integration)', 'info');
         }
 
         // API Functions with enhanced logging
@@ -737,20 +876,6 @@
             updateDebugPanel();
         }
 
-        // Initialize user info with enhanced logging
-        function initUser() {
-            log('🚀 Initializing user session', 'info');
-            
-            const displayName = telegramUser.first_name;
-            userNameEl.textContent = displayName;
-            
-            // Create avatar with first letter
-            const firstLetter = telegramUser.first_name ? telegramUser.first_name[0].toUpperCase() : '👤';
-            userAvatarEl.textContent = firstLetter;
-            
-            log(`👤 User initialized: ${displayName} (ID: ${telegramUser.id})`, 'success');
-        }
-
         // Toast notifications
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
@@ -766,6 +891,11 @@
 
         // Playlist Management Functions
         async function loadUserPlaylist() {
+            if (!telegramUser) {
+                log('⚠️ Cannot load playlist - no user', 'warning');
+                return;
+            }
+            
             log(`📋 Loading user playlist for: ${telegramUser.id}`, 'info');
             
             try {
@@ -780,6 +910,12 @@
         }
 
         async function togglePlaylist() {
+            if (!telegramUser) {
+                log('⚠️ Open playlist skipped - no user', 'warning');
+                showToast('لطفاً ابتدا وارد شوید!', 'error');
+                return;
+            }
+
             const isOpen = playlistModal.classList.contains('show');
             
             if (isOpen) {
@@ -1035,7 +1171,7 @@
                 setTimeout(playNext, 1000);
             });
             updateDisplay(song);
-            log(`⏭️ Playing next song: ${song.title}`, 'info');
+            log(`⏭️ Playing next song: ${song.title} (${currentIndex + 1}/${playlist.length})`, 'info');
         }
 
         // Event listeners
@@ -1068,8 +1204,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             log('🚀 Starting application initialization', 'info');
             
-            // Initialize user
-            initUser();
+            // Initialize Telegram first
+            initializeTelegram();
             
             // Test API connection
             setTimeout(() => {
@@ -1080,10 +1216,12 @@
                 });
             }, 1000);
 
-            // Load user playlist
+            // Load user playlist after user is initialized
             setTimeout(() => {
-                loadUserPlaylist();
-            }, 1500);
+                if (telegramUser) {
+                    loadUserPlaylist();
+                }
+            }, 2000);
             
             // Load CSV
             log('📊 Starting CSV download', 'info');
