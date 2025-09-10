@@ -1313,61 +1313,83 @@ async function displayPlaylist() {
             }
         }, { once: true });
 
-        Papa.parse(csvUrl, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                log(`📊 CSV loaded: ${results.data.length} rows`);
-                
-                const songs = results.data
-                    .map(row => ({
-                        id: row.id?.trim() || row.ID?.trim() || `auto_${Math.random().toString(36).substr(2, 9)}`, // Try 'id' or 'ID' column, or generate
+Papa.parse(csvUrl, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+        console.log('🔍 STEP 1: Papa parse completed');
+        console.log('🔍 STEP 2: Results:', results.data.length, 'rows');
+        
+        try {
+            log(`📊 CSV loaded: ${results.data.length} rows`);
+            console.log('🔍 STEP 3: Starting song mapping');
+            
+            const songs = results.data
+                .map(row => {
+                    return {
+                        id: row.id?.trim() || row.ID?.trim() || `auto_${Math.random().toString(36).substr(2, 9)}`,
                         title: row.title?.trim(),
                         poet: row.poet?.trim(),
                         lyric: row.lyric?.trim(),
                         url: row.url?.trim()
-                    }))
-                    .filter(song => song.url && song.title && song.url.startsWith('http'));
+                    };
+                })
+                .filter(song => song.url && song.title && song.url.startsWith('http'));
 
-                log(`🎵 Valid songs found: ${songs.length}`);
-                log(`🆔 Sample song IDs: ${songs.slice(0, 3).map(s => s.id).join(', ')}`);
+            console.log('🔍 STEP 4: Song mapping complete, valid songs:', songs.length);
+            log(`🎵 Valid songs found: ${songs.length}`);
 
-                if (songs.length === 0) {
-                    titleEl.textContent = 'خطا';
-                    titleEl.classList.remove('loading');
-                    lyricsEl.textContent = '';
-                    lyricsEl.classList.remove('loading');
-                    errorEl.textContent = 'هیچ آهنگ معتبری در فایل یافت نشد.';
-                    log('❌ No valid songs found');
-                    return;
-                }
-
-                playlist = shuffleNoConsecutiveDuplicates(songs);
-                const firstSong = playlist[0];
-                audio.src = firstSong.url;
-                updateDisplay(firstSong);
-                
-                // Start visual effects
-                startVisualEffects();
-                
-                audio.play().catch(e => {
-                    console.error('Initial playbook failed:', e);
-                    clickHintEl.style.display = 'block';
-                });
-                
-                log(`✅ Player initialized with ${playlist.length} songs`);
-            },
-            error: function(error) {
-                console.error('Error loading CSV:', error);
-                titleEl.textContent = 'خطا در بارگذاری';
+            if (songs.length === 0) {
+                console.log('🔍 STEP 5: No valid songs - stopping');
+                titleEl.textContent = 'خطا';
                 titleEl.classList.remove('loading');
                 lyricsEl.textContent = '';
                 lyricsEl.classList.remove('loading');
-                errorEl.textContent = 'لطفاً اتصال اینترنت را بررسی کنید یا فایل را بررسی کنید.';
-                log(`❌ CSV loading failed: ${error.message}`);
+                errorEl.textContent = 'هیچ آهنگ معتبری در فایل یافت نشد.';
+                return;
             }
-        });
+
+            console.log('🔍 STEP 6: Starting shuffle');
+            playlist = shuffleNoConsecutiveDuplicates(songs);
+            console.log('🔍 STEP 7: Shuffle complete');
+            
+            const firstSong = playlist[0];
+            console.log('🔍 STEP 8: First song selected:', firstSong.title);
+            
+            audio.src = firstSong.url;
+            console.log('🔍 STEP 9: Audio source set');
+            
+            console.log('🔍 STEP 10: Calling updateDisplay');
+            updateDisplay(firstSong);
+            console.log('🔍 STEP 11: updateDisplay completed');
+            
+            // Start visual effects
+            startVisualEffects();
+            console.log('🔍 STEP 12: Visual effects started');
+            
+            audio.play().catch(e => {
+                console.error('Initial playback failed:', e);
+                clickHintEl.style.display = 'block';
+            });
+            
+            console.log('🔍 STEP 13: All initialization complete!');
+            log(`✅ Player initialized with ${playlist.length} songs`);
+            
+        } catch (error) {
+            console.error('🔍 ERROR in CSV processing:', error);
+            console.error('🔍 ERROR stack:', error.stack);
+            log(`❌ Error processing CSV: ${error.message}`);
+            errorEl.textContent = `خطا در پردازش: ${error.message}`;
+        }
+    },
+    error: function(error) {
+        console.error('🔍 Papa Parse Error:', error);
+        titleEl.textContent = 'خطا در بارگذاری';
+        titleEl.classList.remove('loading');
+        errorEl.textContent = 'خطا در بارگذاری CSV';
+    }
+});
 
         // Initialize everything
         document.addEventListener('DOMContentLoaded', () => {
