@@ -157,10 +157,10 @@ async function sendToAPI(endpoint, data) {
 function updateAPIStatus(isOnline) {
     if (isOnline) {
         apiStatusEl.className = 'api-status online';
-        apiStatusEl.textContent = '🟢 API Online';
+        apiStatusEl.textContent = '🟢';
     } else {
         apiStatusEl.className = 'api-status offline';
-        apiStatusEl.textContent = '🔴 API Offline';
+        apiStatusEl.textContent = '🔴';
     }
 }
 
