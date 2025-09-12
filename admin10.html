@@ -894,6 +894,98 @@
             }
         }
 
+        // Load top liked songs
+        async function loadTopLikedSongs() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/top-liked?limit=10`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const topLiked = await response.json();
+                
+                if (topLiked.length === 0) {
+                    document.getElementById('topLikedContent').innerHTML = 
+                        '<div class="loading">No liked songs available yet</div>';
+                    return;
+                }
+
+                const tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Song (ID - Title)</th>
+                                <th>Poet</th>
+                                <th>👍 Likes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${topLiked.map((song, index) => `
+                                <tr>
+                                    <td><span class="rank-badge">${index + 1}</span></td>
+                                    <td><strong>ID: ${song.id || 'N/A'} - ${song.title}</strong></td>
+                                    <td>${song.poet || 'Unknown'}</td>
+                                    <td><span class="rating-badge like">${song.likes} likes</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                document.getElementById('topLikedContent').innerHTML = tableHTML;
+                console.log('👍 Top liked songs loaded:', topLiked.length);
+            } catch (error) {
+                console.error('❌ Error loading top liked songs:', error);
+                document.getElementById('topLikedContent').innerHTML = 
+                    '<div class="error-message">Failed to load top liked songs</div>';
+            }
+        }
+
+        // Load top disliked songs
+        async function loadTopDislikedSongs() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/top-disliked?limit=10`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const topDisliked = await response.json();
+                
+                if (topDisliked.length === 0) {
+                    document.getElementById('topDislikedContent').innerHTML = 
+                        '<div class="loading">No disliked songs available yet</div>';
+                    return;
+                }
+
+                const tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Song (ID - Title)</th>
+                                <th>Poet</th>
+                                <th>👎 Dislikes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${topDisliked.map((song, index) => `
+                                <tr>
+                                    <td><span class="rank-badge">${index + 1}</span></td>
+                                    <td><strong>ID: ${song.id || 'N/A'} - ${song.title}</strong></td>
+                                    <td>${song.poet || 'Unknown'}</td>
+                                    <td><span class="rating-badge dislike">${song.dislikes} dislikes</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                document.getElementById('topDislikedContent').innerHTML = tableHTML;
+                console.log('👎 Top disliked songs loaded:', topDisliked.length);
+            } catch (error) {
+                console.error('❌ Error loading top disliked songs:', error);
+                document.getElementById('topDislikedContent').innerHTML = 
+                    '<div class="error-message">Failed to load top disliked songs</div>';
+            }
+        }
+
         // Load recent activity
         async function loadRecentActivity() {
             try {
