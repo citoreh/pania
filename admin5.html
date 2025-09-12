@@ -1204,7 +1204,7 @@
                         <div class="playlist-tracks">
                             ${userPlaylists.map(track => `
                                 <div class="track-item">
-                                    ID: ${track.id || 'N/A'} - ${track.title} (${track.poet || 'Unknown'})
+                                    <strong>ID: ${track.id || 'N/A'} - ${track.title}</strong> (${track.poet || 'Unknown'})
                                     <small> - Added: ${new Date(track.addedDate).toLocaleDateString('fa-IR')}</small>
                                 </div>
                             `).join('')}
