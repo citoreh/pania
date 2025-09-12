@@ -468,6 +468,98 @@
             border-bottom: none;
         }
 
+        /* New Styles for Songs with Ratings Section */
+        .filter-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-controls .refresh-btn.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .song-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid transparent;
+        }
+
+        .song-item.liked {
+            border-left-color: #4CAF50;
+        }
+
+        .song-item.disliked {
+            border-left-color: #f44336;
+        }
+
+        .song-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .song-info {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .song-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+            font-size: 1.1rem;
+        }
+
+        .song-poet {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .song-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .song-url {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .song-url:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .rating-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .rating-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -490,6 +582,16 @@
                 width: 95%;
                 margin: 2% auto;
                 max-height: 95vh;
+            }
+
+            .song-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .rating-info {
+                flex-wrap: wrap;
+                gap: 10px;
             }
         }
 
@@ -601,6 +703,22 @@
                 </div>
             </div>
         </div>
+
+        <!-- NEW: Songs with Ratings and URLs Section -->
+        <div class="dashboard-section">
+            <h2 class="section-header">🎯 Songs with Ratings & URLs</h2>
+            <div class="filter-controls">
+                <button class="refresh-btn active" onclick="loadSongsWithRatings('all')" id="btnAll">All Ratings</button>
+                <button class="refresh-btn" onclick="loadSongsWithRatings('like')" id="btnLikes">👍 Likes Only</button>
+                <button class="refresh-btn" onclick="loadSongsWithRatings('dislike')" id="btnDislikes">👎 Dislikes Only</button>
+            </div>
+            <div id="songsWithRatings">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading songs with ratings...
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modals -->
@@ -694,6 +812,7 @@
                     loadTopSongs(),
                     loadRecentActivity(),
                     loadDetailedAnalytics(),
+                    loadSongsWithRatings('all'),
                     updateChartsWithRealData()
                 ]);
                 
@@ -748,8 +867,7 @@
                         <thead>
                             <tr>
                                 <th>Rank</th>
-                                <th>Song ID</th>
-                                <th>Song Title</th>
+                                <th>Song (ID - Title)</th>
                                 <th>Poet</th>
                                 <th>Play Count</th>
                             </tr>
@@ -758,8 +876,7 @@
                             ${topSongs.map((song, index) => `
                                 <tr>
                                     <td><span class="rank-badge">${index + 1}</span></td>
-                                    <td><strong>${song.id || 'N/A'}</strong></td>
-                                    <td><strong>${song.title}</strong></td>
+                                    <td><strong>ID: ${song.id || 'N/A'} - ${song.title}</strong></td>
                                     <td>${song.poet || 'Unknown'}</td>
                                     <td><strong>${song.plays}</strong></td>
                                 </tr>
@@ -839,8 +956,7 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Song ID</th>
-                                <th>Song</th>
+                                <th>Song (ID - Title)</th>
                                 <th>Poet</th>
                                 <th>Plays</th>
                                 <th>Likes</th>
@@ -857,8 +973,7 @@
                                 
                                 return `
                                     <tr>
-                                        <td><strong>${song.id || 'N/A'}</strong></td>
-                                        <td><strong>${song.title}</strong></td>
+                                        <td><strong>ID: ${song.id || 'N/A'} - ${song.title}</strong></td>
                                         <td>${song.poet || 'Unknown'}</td>
                                         <td><strong>${song.plays}</strong></td>
                                         <td><span class="rating-badge like">${song.likes}</span></td>
@@ -881,7 +996,7 @@
             }
         }
 
-        // Load songs with ratings and URLs
+        // NEW FUNCTION: Load songs with ratings and URLs
         async function loadSongsWithRatings(filter = 'all') {
             try {
                 // Update active button
@@ -954,7 +1069,6 @@
 
                 const songsHTML = sortedSongs.map(song => {
                     const ratingClass = song.likes > song.dislikes ? 'liked' : song.dislikes > song.likes ? 'disliked' : '';
-                    const totalRatings = song.likes + song.dislikes;
                     
                     return `
                         <div class="song-item ${ratingClass}">
@@ -1201,8 +1315,7 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Song ID</th>
-                                <th>Title</th>
+                                <th>Song (ID - Title)</th>
                                 <th>Poet</th>
                                 <th>User ID</th>
                                 <th>Play Count</th>
@@ -1212,8 +1325,7 @@
                         <tbody>
                             ${plays.map(play => `
                                 <tr>
-                                    <td><strong>${play.id || 'N/A'}</strong></td>
-                                    <td>${play.title}</td>
+                                    <td><strong>ID: ${play.id || 'N/A'} - ${play.title}</strong></td>
                                     <td>${play.poet || 'Unknown'}</td>
                                     <td>${play.userId.substring(0, 12)}...</td>
                                     <td><strong>${play.playCount}</strong></td>
@@ -1252,8 +1364,7 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Song ID</th>
-                                <th>Title</th>
+                                <th>Song (ID - Title)</th>
                                 <th>Poet</th>
                                 <th>User ID</th>
                                 <th>Rating</th>
@@ -1263,8 +1374,7 @@
                         <tbody>
                             ${likes.map(like => `
                                 <tr>
-                                    <td><strong>${like.id || 'N/A'}</strong></td>
-                                    <td>${like.title}</td>
+                                    <td><strong>ID: ${like.id || 'N/A'} - ${like.title}</strong></td>
                                     <td>${like.poet || 'Unknown'}</td>
                                     <td>${like.userId.substring(0, 12)}...</td>
                                     <td><span class="rating-badge like">👍 Like</span></td>
@@ -1365,7 +1475,7 @@
             try {
                 console.log('📊 Exporting dashboard data...');
                 
-                const [overview, topSongs, recentActivity, detailed, users, plays, likes, playlists] = await Promise.all([
+                const [overview, topSongs, recentActivity, detailed, users, plays, likes, playlists, songsWithRatings] = await Promise.all([
                     fetch(`${API_BASE_URL}/stats/overall`).then(r => r.json()).catch(() => []),
                     fetch(`${API_BASE_URL}/stats/top-songs?limit=50`).then(r => r.json()).catch(() => []),
                     fetch(`${API_BASE_URL}/stats/recent-ratings?limit=100`).then(r => r.json()).catch(() => []),
@@ -1373,7 +1483,8 @@
                     fetch(`${API_BASE_URL}/stats/users`).then(r => r.json()).catch(() => []),
                     fetch(`${API_BASE_URL}/stats/all-plays`).then(r => r.json()).catch(() => []),
                     fetch(`${API_BASE_URL}/stats/all-ratings`).then(r => r.json()).catch(() => []),
-                    fetch(`${API_BASE_URL}/stats/all-playlists`).then(r => r.json()).catch(() => [])
+                    fetch(`${API_BASE_URL}/stats/all-playlists`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/all-ratings`).then(r => r.json()).catch(() => []) // For songs with ratings
                 ]);
                 
                 const exportData = {
@@ -1385,7 +1496,8 @@
                     users,
                     plays,
                     likes,
-                    playlists
+                    playlists,
+                    songsWithRatings
                 };
                 
                 const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
