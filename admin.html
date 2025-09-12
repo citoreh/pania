@@ -832,12 +832,13 @@
 await Promise.all([
     loadOverviewStats(),
     loadTopSongs(),
-    loadTopLikedSongs(),        // MISSING
-    loadTopDislikedSongs(),     // MISSING
+    loadTopLikedSongs(),        // ADD THIS
+    loadTopDislikedSongs(),     // ADD THIS
     loadRecentActivity(),
     loadDetailedAnalytics(),
     loadSongsWithRatings('all'),
     loadDailyActivity(),
+    loadUserProfiles(),         // ADD THIS TOO
     updateChartsWithRealData()
 ]);
                 
@@ -1552,7 +1553,7 @@ await Promise.all([
                 const playlistsHTML = Object.entries(playlistsByUser).map(([userId, userPlaylists]) => `
                     <div class="playlist-item">
                         <div class="playlist-header">
-                            <div class="playlist-user">User: ${userId.substring(0, 12)}...</div>
+                            <div class="playlist-user">${getUserDisplayName(userId)}</div>
                             <div class="playlist-count">${userPlaylists.length} tracks</div>
                         </div>
                         <div class="playlist-tracks">
@@ -1669,6 +1670,45 @@ await Promise.all([
                 clearInterval(autoRefreshInterval);
             }
         });
+        // Add this function to your admin dashboard
+async function loadDailyActivity() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/stats/daily-activity?days=7`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const dailyActivity = await response.json();
+        cachedData.dailyActivity = dailyActivity;
+        
+        // Update the activity chart immediately after loading data
+        if (charts.activity && dailyActivity.length > 0) {
+            const labels = dailyActivity.map(day => {
+                const date = new Date(day.date);
+                return date.toLocaleDateString('fa-IR', { weekday: 'short' });
+            });
+            const playsData = dailyActivity.map(day => day.plays);
+            
+            charts.activity.data.labels = labels;
+            charts.activity.data.datasets[0].data = playsData;
+            charts.activity.update();
+            console.log('📈 Daily activity chart updated with data:', playsData);
+        }
+        
+        console.log('📈 Daily activity loaded:', dailyActivity.length);
+    } catch (error) {
+        console.error('❌ Error loading daily activity:', error);
+        // Create fallback data
+        cachedData.dailyActivity = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            cachedData.dailyActivity.push({
+                date: date.toISOString().split('T')[0],
+                plays: 0,
+                ratings: 0
+            });
+        }
+    }
+}
     </script>
 </body>
 </html>
