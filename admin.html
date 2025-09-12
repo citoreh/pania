@@ -98,6 +98,8 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             text-align: center;
             transition: transform 0.3s ease;
+            cursor: pointer;
+            position: relative;
         }
 
         .stat-card:hover {
@@ -137,6 +139,22 @@
             color: #f56565;
         }
 
+        .view-details-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .view-details-btn:hover {
+            transform: scale(1.05);
+        }
+
         .dashboard-section {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -161,20 +179,20 @@
             gap: 25px;
         }
 
-.chart-container {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    position: relative;
-    height: 300px; /* Fixed height */
-}
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+            height: 300px;
+        }
 
-.chart-container canvas {
-    max-height: 250px !important;
-    width: 100% !important;
-    height: 250px !important;
-}
+        .chart-container canvas {
+            max-height: 250px !important;
+            width: 100% !important;
+            height: 250px !important;
+        }
 
         .chart-title {
             font-size: 1.2rem;
@@ -237,6 +255,59 @@
         .rating-badge.dislike {
             background: #fed7d7;
             color: #742a2a;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #667eea;
         }
 
         .loading {
@@ -330,6 +401,165 @@
             font-size: 0.8rem;
         }
 
+        .user-item {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-id {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .user-username {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .playlist-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .playlist-user {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .playlist-count {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .playlist-tracks {
+            padding-right: 20px;
+        }
+
+        .track-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .track-item:last-child {
+            border-bottom: none;
+        }
+
+        /* New Styles for Songs with Ratings Section */
+        .filter-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-controls .refresh-btn.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .song-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid transparent;
+        }
+
+        .song-item.liked {
+            border-left-color: #4CAF50;
+        }
+
+        .song-item.disliked {
+            border-left-color: #f44336;
+        }
+
+        .song-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .song-info {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .song-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+            font-size: 1.1rem;
+        }
+
+        .song-poet {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .song-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .song-url {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .song-url:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .rating-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .rating-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -346,6 +576,22 @@
             .refresh-controls {
                 flex-direction: column;
                 align-items: center;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 2% auto;
+                max-height: 95vh;
+            }
+
+            .song-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .rating-info {
+                flex-wrap: wrap;
+                gap: 10px;
             }
         }
 
@@ -372,43 +618,55 @@
 
         <!-- Overview Stats -->
         <div class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card" onclick="showUsersModal()">
                 <span class="stat-icon">👥</span>
                 <span class="stat-number" id="totalUsers">-</span>
                 <div class="stat-label">Total Users</div>
                 <div class="stat-change positive" id="usersChange">+0 today</div>
+                <button class="view-details-btn">View Users List</button>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="showPlaysModal()">
                 <span class="stat-icon">🎵</span>
                 <span class="stat-number" id="totalPlays">-</span>
                 <div class="stat-label">Total Plays</div>
                 <div class="stat-change positive" id="playsChange">+0 today</div>
+                <button class="view-details-btn">View Plays Details</button>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="showLikesModal()">
                 <span class="stat-icon">👍</span>
                 <span class="stat-number" id="totalLikes">-</span>
                 <div class="stat-label">Total Likes</div>
                 <div class="stat-change positive" id="likesChange">+0 today</div>
+                <button class="view-details-btn">View Likes List</button>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="showPlaylistsModal()">
                 <span class="stat-icon">📝</span>
                 <span class="stat-number" id="totalPlaylists">-</span>
                 <div class="stat-label">Playlist Items</div>
                 <div class="stat-change positive" id="playlistsChange">+0 today</div>
+                <button class="view-details-btn">View Playlists</button>
             </div>
         </div>
 
         <!-- Charts Section -->
         <div class="dashboard-section">
-            <h2 class="section-header">📈 Analytics Charts</h2>
+            <h2 class="section-header">📈 Real-Time Analytics Charts</h2>
             <div class="charts-grid">
                 <div class="chart-container">
-                    <h3 class="chart-title">Daily Activity</h3>
+                    <h3 class="chart-title">Daily Activity Trends</h3>
                     <canvas id="activityChart" width="400" height="200"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3 class="chart-title">User Engagement</h3>
+                    <h3 class="chart-title">User Engagement Distribution</h3>
                     <canvas id="engagementChart" width="400" height="200"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Top Songs Performance</h3>
+                    <canvas id="songsChart" width="400" height="200"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Ratings Overview</h3>
+                    <canvas id="ratingsChart" width="400" height="200"></canvas>
                 </div>
             </div>
         </div>
@@ -420,6 +678,28 @@
                 <div class="loading">
                     <div class="loading-spinner"></div>
                     Loading top songs...
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Liked Songs Section -->
+        <div class="dashboard-section">
+            <h2 class="section-header">👍 Top Liked Songs</h2>
+            <div id="topLikedContent">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading top liked songs...
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Disliked Songs Section -->
+        <div class="dashboard-section">
+            <h2 class="section-header">👎 Top Disliked Songs</h2>
+            <div id="topDislikedContent">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading top disliked songs...
                 </div>
             </div>
         </div>
@@ -445,6 +725,87 @@
                 </div>
             </div>
         </div>
+
+        <!-- NEW: Songs with Ratings and URLs Section -->
+        <div class="dashboard-section">
+            <h2 class="section-header">🎯 Songs with Ratings & URLs</h2>
+            <div class="filter-controls">
+                <button class="refresh-btn active" onclick="loadSongsWithRatings('all')" id="btnAll">All Ratings</button>
+                <button class="refresh-btn" onclick="loadSongsWithRatings('like')" id="btnLikes">👍 Likes Only</button>
+                <button class="refresh-btn" onclick="loadSongsWithRatings('dislike')" id="btnDislikes">👎 Dislikes Only</button>
+            </div>
+            <div id="songsWithRatings">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading songs with ratings...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Users Modal -->
+    <div id="usersModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">👥 All Users</h2>
+                <span class="close" onclick="closeModal('usersModal')">&times;</span>
+            </div>
+            <div id="usersModalContent">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading users...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plays Modal -->
+    <div id="playsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🎵 All Plays Details</h2>
+                <span class="close" onclick="closeModal('playsModal')">&times;</span>
+            </div>
+            <div id="playsModalContent">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading plays data...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Likes Modal -->
+    <div id="likesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">👍 All Likes</h2>
+                <span class="close" onclick="closeModal('likesModal')">&times;</span>
+            </div>
+            <div id="likesModalContent">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading likes data...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Playlists Modal -->
+    <div id="playlistsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📝 All Playlists</h2>
+                <span class="close" onclick="closeModal('playlistsModal')">&times;</span>
+            </div>
+            <div id="playlistsModalContent">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading playlists data...
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -453,10 +814,11 @@
         
         let autoRefreshInterval = null;
         let charts = {};
+        let cachedData = {};
         
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Initializing Admin Dashboard...');
+            console.log('🚀 Initializing Enhanced Admin Dashboard...');
             refreshAllData();
             initializeCharts();
         });
@@ -467,13 +829,17 @@
             document.getElementById('lastUpdate').textContent = 'Updating...';
             
             try {
-                await Promise.all([
-                    loadOverviewStats(),
-                    loadTopSongs(),
-                    loadRecentActivity(),
-                    loadDetailedAnalytics(),
-                    updateCharts()
-                ]);
+await Promise.all([
+    loadOverviewStats(),
+    loadTopSongs(),
+    loadTopLikedSongs(),        // MISSING
+    loadTopDislikedSongs(),     // MISSING
+    loadRecentActivity(),
+    loadDetailedAnalytics(),
+    loadSongsWithRatings('all'),
+    loadDailyActivity(),
+    updateChartsWithRealData()
+]);
                 
                 document.getElementById('lastUpdate').textContent = 
                     `Last updated: ${new Date().toLocaleString('fa-IR')}`;
@@ -498,6 +864,7 @@
                 document.getElementById('totalLikes').textContent = stats.totalLikes || 0;
                 document.getElementById('totalPlaylists').textContent = stats.totalPlaylistEntries || 0;
                 
+                cachedData.overviewStats = stats;
                 console.log('📊 Overview stats loaded:', stats);
             } catch (error) {
                 console.error('❌ Error loading overview stats:', error);
@@ -512,6 +879,7 @@
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const topSongs = await response.json();
+                cachedData.topSongs = topSongs;
                 
                 if (topSongs.length === 0) {
                     document.getElementById('topSongsContent').innerHTML = 
@@ -524,7 +892,7 @@
                         <thead>
                             <tr>
                                 <th>Rank</th>
-                                <th>Song Title</th>
+                                <th>Song (ID - Title)</th>
                                 <th>Poet</th>
                                 <th>Play Count</th>
                             </tr>
@@ -533,7 +901,7 @@
                             ${topSongs.map((song, index) => `
                                 <tr>
                                     <td><span class="rank-badge">${index + 1}</span></td>
-                                    <td><strong>${song.title}</strong></td>
+                                    <td><strong>ID: ${song.id || 'N/A'} - ${song.title}</strong></td>
                                     <td>${song.poet || 'Unknown'}</td>
                                     <td><strong>${song.plays}</strong></td>
                                 </tr>
@@ -551,6 +919,98 @@
             }
         }
 
+        // Load top liked songs
+        async function loadTopLikedSongs() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/top-liked?limit=10`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const topLiked = await response.json();
+                
+                if (topLiked.length === 0) {
+                    document.getElementById('topLikedContent').innerHTML = 
+                        '<div class="loading">No liked songs available yet</div>';
+                    return;
+                }
+
+                const tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Song (ID - Title)</th>
+                                <th>Poet</th>
+                                <th>👍 Likes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${topLiked.map((song, index) => `
+                                <tr>
+                                    <td><span class="rank-badge">${index + 1}</span></td>
+                                    <td><strong>ID: ${song.id || 'N/A'} - ${song.title}</strong></td>
+                                    <td>${song.poet || 'Unknown'}</td>
+                                    <td><span class="rating-badge like">${song.likes} likes</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                document.getElementById('topLikedContent').innerHTML = tableHTML;
+                console.log('👍 Top liked songs loaded:', topLiked.length);
+            } catch (error) {
+                console.error('❌ Error loading top liked songs:', error);
+                document.getElementById('topLikedContent').innerHTML = 
+                    '<div class="error-message">Failed to load top liked songs</div>';
+            }
+        }
+
+        // Load top disliked songs
+        async function loadTopDislikedSongs() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/top-disliked?limit=10`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const topDisliked = await response.json();
+                
+                if (topDisliked.length === 0) {
+                    document.getElementById('topDislikedContent').innerHTML = 
+                        '<div class="loading">No disliked songs available yet</div>';
+                    return;
+                }
+
+                const tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Song (ID - Title)</th>
+                                <th>Poet</th>
+                                <th>👎 Dislikes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${topDisliked.map((song, index) => `
+                                <tr>
+                                    <td><span class="rank-badge">${index + 1}</span></td>
+                                    <td><strong>ID: ${song.id || 'N/A'} - ${song.title}</strong></td>
+                                    <td>${song.poet || 'Unknown'}</td>
+                                    <td><span class="rating-badge dislike">${song.dislikes} dislikes</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                document.getElementById('topDislikedContent').innerHTML = tableHTML;
+                console.log('👎 Top disliked songs loaded:', topDisliked.length);
+            } catch (error) {
+                console.error('❌ Error loading top disliked songs:', error);
+                document.getElementById('topDislikedContent').innerHTML = 
+                    '<div class="error-message">Failed to load top disliked songs</div>';
+            }
+        }
+
         // Load recent activity
         async function loadRecentActivity() {
             try {
@@ -558,6 +1018,7 @@
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const activities = await response.json();
+                cachedData.recentActivity = activities;
                 
                 if (activities.length === 0) {
                     document.getElementById('recentActivity').innerHTML = 
@@ -574,7 +1035,7 @@
                         <div class="activity-item">
                             <div class="activity-icon ${iconClass}">${icon}</div>
                             <div class="activity-content">
-                                <div class="activity-title">${activity.title}</div>
+                                <div class="activity-title">ID: ${activity.id || 'N/A'} - ${activity.title}</div>
                                 <div class="activity-details">By ${activity.poet || 'Unknown'} • User ${activity.userId.substring(0, 8)}...</div>
                             </div>
                             <div class="activity-time">${timeAgo}</div>
@@ -598,6 +1059,7 @@
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const analytics = await response.json();
+                cachedData.detailedAnalytics = analytics;
                 
                 if (analytics.length === 0) {
                     document.getElementById('detailedAnalytics').innerHTML = 
@@ -605,14 +1067,13 @@
                     return;
                 }
 
-                // Show top 20 songs with detailed stats
                 const top20 = analytics.slice(0, 20);
                 
                 const tableHTML = `
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Song</th>
+                                <th>Song (ID - Title)</th>
                                 <th>Poet</th>
                                 <th>Plays</th>
                                 <th>Likes</th>
@@ -629,7 +1090,7 @@
                                 
                                 return `
                                     <tr>
-                                        <td><strong>${song.title}</strong></td>
+                                        <td><strong>ID: ${song.id || 'N/A'} - ${song.title}</strong></td>
                                         <td>${song.poet || 'Unknown'}</td>
                                         <td><strong>${song.plays}</strong></td>
                                         <td><span class="rating-badge like">${song.likes}</span></td>
@@ -652,86 +1113,474 @@
             }
         }
 
-        // Initialize charts
-// Add this to admin.html script section
-function initializeCharts() {
-    // Check if Chart.js loaded
-    if (typeof Chart === 'undefined') {
-        console.error('Chart.js failed to load');
-        document.querySelector('.charts-grid').innerHTML = 
-            '<div class="error-message">Charts failed to load - Chart.js library missing</div>';
-        return;
-    }
+        // NEW FUNCTION: Load songs with ratings and URLs
+        async function loadSongsWithRatings(filter = 'all') {
+            try {
+                // Update active button
+                document.querySelectorAll('.filter-controls .refresh-btn').forEach(btn => btn.classList.remove('active'));
+                if (filter === 'all') document.getElementById('btnAll').classList.add('active');
+                else if (filter === 'like') document.getElementById('btnLikes').classList.add('active');
+                else if (filter === 'dislike') document.getElementById('btnDislikes').classList.add('active');
 
-    try {
-        // Activity Chart with error handling
-        const activityCtx = document.getElementById('activityChart');
-        if (activityCtx) {
-            charts.activity = new Chart(activityCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Daily Plays',
-                        data: [0, 0, 0, 0, 0, 0, 0], // Start with zeros
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
+                const content = document.getElementById('songsWithRatings');
+                content.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Loading songs with ratings...</div>';
+
+                // Get ratings data
+                const ratingsResponse = await fetch(`${API_BASE_URL}/stats/all-ratings${filter !== 'all' ? `?type=${filter}` : ''}`);
+                if (!ratingsResponse.ok) throw new Error(`HTTP ${ratingsResponse.status}`);
+                const ratings = await ratingsResponse.json();
+
+                // Get playlist data to include URLs
+                const playlistsResponse = await fetch(`${API_BASE_URL}/stats/all-playlists`);
+                const playlists = playlistsResponse.ok ? await playlistsResponse.json() : [];
+
+                if (ratings.length === 0) {
+                    content.innerHTML = `<div class="loading">No ${filter === 'all' ? '' : filter + ' '}ratings found</div>`;
+                    return;
                 }
-            });
+
+                // Create URL lookup from playlists
+                const urlLookup = {};
+                playlists.forEach(item => {
+                    const key = item.id || item.title;
+                    if (!urlLookup[key] && item.url) {
+                        urlLookup[key] = item.url;
+                    }
+                });
+
+                // Group ratings by song and count
+                const songRatings = {};
+                ratings.forEach(rating => {
+                    const key = rating.id || rating.title;
+                    if (!songRatings[key]) {
+                        songRatings[key] = {
+                            id: rating.id,
+                            title: rating.title,
+                            poet: rating.poet,
+                            url: urlLookup[key] || null,
+                            likes: 0,
+                            dislikes: 0,
+                            lastRated: rating.timestamp,
+                            users: new Set()
+                        };
+                    }
+                    
+                    if (rating.rating === 'like') songRatings[key].likes++;
+                    if (rating.rating === 'dislike') songRatings[key].dislikes++;
+                    songRatings[key].users.add(rating.userId);
+                    
+                    if (rating.timestamp > songRatings[key].lastRated) {
+                        songRatings[key].lastRated = rating.timestamp;
+                    }
+                });
+
+                // Convert set to size for user count
+                Object.values(songRatings).forEach(song => {
+                    song.userCount = song.users.size;
+                    delete song.users;
+                });
+
+                // Sort by most recent ratings
+                const sortedSongs = Object.values(songRatings)
+                    .sort((a, b) => new Date(b.lastRated) - new Date(a.lastRated));
+
+                const songsHTML = sortedSongs.map(song => {
+                    const ratingClass = song.likes > song.dislikes ? 'liked' : song.dislikes > song.likes ? 'disliked' : '';
+                    
+                    return `
+                        <div class="song-item ${ratingClass}">
+                            <div class="song-header">
+                                <div class="song-info">
+                                    <div class="song-title">ID: ${song.id || 'N/A'} - ${song.title}</div>
+                                    <div class="song-poet">By ${song.poet || 'Unknown'}</div>
+                                </div>
+                                <div class="song-actions">
+                                    ${song.url ? `<a href="${song.url}" target="_blank" class="song-url">🎵 Listen</a>` : '<span style="color: #999;">No URL</span>'}
+                                </div>
+                            </div>
+                            <div class="rating-info">
+                                <div class="rating-stat">
+                                    <span class="rating-badge like">👍 ${song.likes}</span>
+                                </div>
+                                <div class="rating-stat">
+                                    <span class="rating-badge dislike">👎 ${song.dislikes}</span>
+                                </div>
+                                <div class="rating-stat">
+                                    <span>👥 ${song.userCount} users</span>
+                                </div>
+                                <div class="rating-stat">
+                                    <span>📅 ${new Date(song.lastRated).toLocaleDateString('fa-IR')}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                content.innerHTML = songsHTML;
+                console.log(`🎯 Songs with ratings loaded: ${sortedSongs.length} (filter: ${filter})`);
+            } catch (error) {
+                console.error('Error loading songs with ratings:', error);
+                document.getElementById('songsWithRatings').innerHTML = 
+                    '<div class="error-message">Failed to load songs with ratings</div>';
+            }
         }
 
-        // Engagement Chart with error handling
-        const engagementCtx = document.getElementById('engagementChart');
-        if (engagementCtx) {
-            charts.engagement = new Chart(engagementCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['No Data Yet'],
-                    datasets: [{
-                        data: [1],
-                        backgroundColor: ['#e2e8f0']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Chart initialization failed:', error);
-    }
-}
+        // Initialize charts with better styling
+        function initializeCharts() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js failed to load');
+                document.querySelector('.charts-grid').innerHTML = 
+                    '<div class="error-message">Charts failed to load - Chart.js library missing</div>';
+                return;
+            }
 
-            // Engagement Chart
-            const engagementCtx = document.getElementById('engagementChart').getContext('2d');
-            charts.engagement = new Chart(engagementCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Likes', 'Dislikes', 'Neutral'],
-                    datasets: [{
-                        data: [300, 50, 100],
-                        backgroundColor: ['#4CAF50', '#f44336', '#9e9e9e']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
+            try {
+                // Activity Chart
+                const activityCtx = document.getElementById('activityChart');
+                if (activityCtx) {
+                    charts.activity = new Chart(activityCtx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: 'Daily Plays',
+                                data: [],
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { display: true },
+                                title: { display: false }
+                            }
+                        }
+                    });
                 }
-            });
+
+                // Engagement Chart
+                const engagementCtx = document.getElementById('engagementChart');
+                if (engagementCtx) {
+                    charts.engagement = new Chart(engagementCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Likes', 'Dislikes', 'No Rating'],
+                            datasets: [{
+                                data: [0, 0, 1],
+                                backgroundColor: ['#4CAF50', '#f44336', '#e2e8f0']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                }
+
+                // Top Songs Chart
+                const songsCtx = document.getElementById('songsChart');
+                if (songsCtx) {
+                    charts.songs = new Chart(songsCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: 'Play Count',
+                                data: [],
+                                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                                borderColor: '#667eea',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+                }
+
+                // Ratings Chart
+                const ratingsCtx = document.getElementById('ratingsChart');
+                if (ratingsCtx) {
+                    charts.ratings = new Chart(ratingsCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Positive', 'Negative'],
+                            datasets: [{
+                                data: [0, 0],
+                                backgroundColor: ['#4CAF50', '#f44336']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                }
+
+                console.log('📈 Charts initialized successfully');
+            } catch (error) {
+                console.error('Chart initialization failed:', error);
+            }
+        }
 
         // Update charts with real data
-        async function updateCharts() {
-            // This would typically fetch time-series data
-            // For now, we'll use mock data
-            console.log('📈 Charts updated with latest data');
+        async function updateChartsWithRealData() {
+            try {
+                // Update daily activity chart
+                if (charts.activity && cachedData.dailyActivity) {
+                    const activityData = cachedData.dailyActivity;
+                    const labels = activityData.map(day => {
+                        const date = new Date(day.date);
+                        return date.toLocaleDateString('fa-IR', { weekday: 'short' });
+                    });
+                    const playsData = activityData.map(day => day.plays);
+                    
+                    charts.activity.data.labels = labels;
+                    charts.activity.data.datasets[0].data = playsData;
+                    charts.activity.update();
+                }
+
+                // Update top songs chart
+                if (charts.songs && cachedData.topSongs) {
+                    const topSongs = cachedData.topSongs.slice(0, 5);
+                    charts.songs.data.labels = topSongs.map(song => song.title.substring(0, 15) + '...');
+                    charts.songs.data.datasets[0].data = topSongs.map(song => song.plays);
+                    charts.songs.update();
+                }
+
+                // Update engagement chart with real data
+                if (charts.engagement && cachedData.overviewStats) {
+                    const stats = cachedData.overviewStats;
+                    const totalInteractions = stats.totalLikes + stats.totalDislikes || 1;
+                    charts.engagement.data.datasets[0].data = [
+                        stats.totalLikes || 0,
+                        stats.totalDislikes || 0,
+                        Math.max(0, stats.totalPlays - totalInteractions)
+                    ];
+                    charts.engagement.update();
+                }
+
+                // Update ratings chart
+                if (charts.ratings && cachedData.overviewStats) {
+                    const stats = cachedData.overviewStats;
+                    charts.ratings.data.datasets[0].data = [
+                        stats.totalLikes || 0,
+                        stats.totalDislikes || 0
+                    ];
+                    charts.ratings.update();
+                }
+
+                console.log('📈 Charts updated with real data');
+            } catch (error) {
+                console.error('❌ Error updating charts:', error);
+            }
+        }
+
+        // Modal functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function showUsersModal() {
+            document.getElementById('usersModal').style.display = 'block';
+            const content = document.getElementById('usersModalContent');
+            
+            try {
+                content.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Loading users...</div>';
+                
+                const response = await fetch(`${API_BASE_URL}/stats/users`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const users = await response.json();
+                
+                if (users.length === 0) {
+                    content.innerHTML = '<div class="loading">No users found</div>';
+                    return;
+                }
+
+                const usersHTML = users.map(user => `
+                    <div class="user-item">
+                        <div class="user-info">
+                            <div class="user-id">User ID: ${user.userId}</div>
+                            <div class="user-username">Username: ${user.username || 'Not available'}</div>
+                        </div>
+                        <div class="user-activity">
+                            Last Activity: ${user.lastActivity ? new Date(user.lastActivity).toLocaleDateString('fa-IR') : 'N/A'}
+                        </div>
+                    </div>
+                `).join('');
+                
+                content.innerHTML = usersHTML;
+            } catch (error) {
+                console.error('Error loading users:', error);
+                content.innerHTML = '<div class="error-message">Failed to load users</div>';
+            }
+        }
+
+        async function showPlaysModal() {
+            document.getElementById('playsModal').style.display = 'block';
+            const content = document.getElementById('playsModalContent');
+            
+            try {
+                content.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Loading plays data...</div>';
+                
+                const response = await fetch(`${API_BASE_URL}/stats/all-plays`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const plays = await response.json();
+                
+                if (plays.length === 0) {
+                    content.innerHTML = '<div class="loading">No plays data found</div>';
+                    return;
+                }
+
+                const tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Song (ID - Title)</th>
+                                <th>Poet</th>
+                                <th>User ID</th>
+                                <th>Play Count</th>
+                                <th>Last Played</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${plays.map(play => `
+                                <tr>
+                                    <td><strong>ID: ${play.id || 'N/A'} - ${play.title}</strong></td>
+                                    <td>${play.poet || 'Unknown'}</td>
+                                    <td>${play.userId.substring(0, 12)}...</td>
+                                    <td><strong>${play.playCount}</strong></td>
+                                    <td>${play.lastPlayed ? new Date(play.lastPlayed).toLocaleDateString('fa-IR') : 'N/A'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                content.innerHTML = tableHTML;
+            } catch (error) {
+                console.error('Error loading plays:', error);
+                content.innerHTML = '<div class="error-message">Failed to load plays data</div>';
+            }
+        }
+
+        async function showLikesModal() {
+            document.getElementById('likesModal').style.display = 'block';
+            const content = document.getElementById('likesModalContent');
+            
+            try {
+                content.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Loading likes data...</div>';
+                
+                const response = await fetch(`${API_BASE_URL}/stats/all-ratings?type=like`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const likes = await response.json();
+                
+                if (likes.length === 0) {
+                    content.innerHTML = '<div class="loading">No likes found</div>';
+                    return;
+                }
+
+                const tableHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Song (ID - Title)</th>
+                                <th>Poet</th>
+                                <th>User ID</th>
+                                <th>Rating</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${likes.map(like => `
+                                <tr>
+                                    <td><strong>ID: ${like.id || 'N/A'} - ${like.title}</strong></td>
+                                    <td>${like.poet || 'Unknown'}</td>
+                                    <td>${like.userId.substring(0, 12)}...</td>
+                                    <td><span class="rating-badge like">👍 Like</span></td>
+                                    <td>${new Date(like.timestamp).toLocaleDateString('fa-IR')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                content.innerHTML = tableHTML;
+            } catch (error) {
+                console.error('Error loading likes:', error);
+                content.innerHTML = '<div class="error-message">Failed to load likes data</div>';
+            }
+        }
+
+        async function showPlaylistsModal() {
+            document.getElementById('playlistsModal').style.display = 'block';
+            const content = document.getElementById('playlistsModalContent');
+            
+            try {
+                content.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Loading playlists...</div>';
+                
+                const response = await fetch(`${API_BASE_URL}/stats/all-playlists`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const playlists = await response.json();
+                
+                if (playlists.length === 0) {
+                    content.innerHTML = '<div class="loading">No playlists found</div>';
+                    return;
+                }
+
+                // Group by user
+                const playlistsByUser = {};
+                playlists.forEach(item => {
+                    if (!playlistsByUser[item.userId]) {
+                        playlistsByUser[item.userId] = [];
+                    }
+                    playlistsByUser[item.userId].push(item);
+                });
+
+                const playlistsHTML = Object.entries(playlistsByUser).map(([userId, userPlaylists]) => `
+                    <div class="playlist-item">
+                        <div class="playlist-header">
+                            <div class="playlist-user">User: ${userId.substring(0, 12)}...</div>
+                            <div class="playlist-count">${userPlaylists.length} tracks</div>
+                        </div>
+                        <div class="playlist-tracks">
+                            ${userPlaylists.map(track => `
+                                <div class="track-item">
+                                    <strong>ID: ${track.id || 'N/A'} - ${track.title}</strong> (${track.poet || 'Unknown'})
+                                    <small> - Added: ${new Date(track.addedDate).toLocaleDateString('fa-IR')}</small>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+                
+                content.innerHTML = playlistsHTML;
+            } catch (error) {
+                console.error('Error loading playlists:', error);
+                content.innerHTML = '<div class="error-message">Failed to load playlists</div>';
+            }
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
         }
 
         // Toggle auto refresh
@@ -745,7 +1594,7 @@ function initializeCharts() {
                 btn.textContent = '⏰ Auto Refresh';
                 console.log('⏸️ Auto refresh disabled');
             } else {
-                autoRefreshInterval = setInterval(refreshAllData, 30000); // 30 seconds
+                autoRefreshInterval = setInterval(refreshAllData, 30000);
                 btn.classList.add('active');
                 btn.textContent = '⏸️ Stop Auto Refresh';
                 console.log('▶️ Auto refresh enabled (30s interval)');
@@ -757,11 +1606,16 @@ function initializeCharts() {
             try {
                 console.log('📊 Exporting dashboard data...');
                 
-                const [overview, topSongs, recentActivity, detailed] = await Promise.all([
-                    fetch(`${API_BASE_URL}/stats/overall`).then(r => r.json()),
-                    fetch(`${API_BASE_URL}/stats/top-songs?limit=50`).then(r => r.json()),
-                    fetch(`${API_BASE_URL}/stats/recent-ratings?limit=100`).then(r => r.json()),
-                    fetch(`${API_BASE_URL}/stats/detailed`).then(r => r.json())
+                const [overview, topSongs, recentActivity, detailed, users, plays, likes, playlists, songsWithRatings] = await Promise.all([
+                    fetch(`${API_BASE_URL}/stats/overall`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/top-songs?limit=50`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/recent-ratings?limit=100`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/detailed`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/users`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/all-plays`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/all-ratings`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/all-playlists`).then(r => r.json()).catch(() => []),
+                    fetch(`${API_BASE_URL}/stats/all-ratings`).then(r => r.json()).catch(() => []) // For songs with ratings
                 ]);
                 
                 const exportData = {
@@ -769,20 +1623,25 @@ function initializeCharts() {
                     overview,
                     topSongs,
                     recentActivity,
-                    detailedAnalytics: detailed
+                    detailedAnalytics: detailed,
+                    users,
+                    plays,
+                    likes,
+                    playlists,
+                    songsWithRatings
                 };
                 
                 const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `pania-admin-export-${new Date().toISOString().split('T')[0]}.json`;
+                a.download = `pania-complete-export-${new Date().toISOString().split('T')[0]}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
-                console.log('✅ Data exported successfully');
+                console.log('✅ Complete data exported successfully');
             } catch (error) {
                 console.error('❌ Export failed:', error);
                 alert('Export failed. Please try again.');
