@@ -829,17 +829,14 @@
             document.getElementById('lastUpdate').textContent = 'Updating...';
             
             try {
-await Promise.all([
-    loadOverviewStats(),
-    loadTopSongs(),
-    loadTopLikedSongs(),        // MISSING
-    loadTopDislikedSongs(),     // MISSING
-    loadRecentActivity(),
-    loadDetailedAnalytics(),
-    loadSongsWithRatings('all'),
-    loadDailyActivity(),
-    updateChartsWithRealData()
-]);
+                await Promise.all([
+                    loadOverviewStats(),
+                    loadTopSongs(),
+                    loadRecentActivity(),
+                    loadDetailedAnalytics(),
+                    loadSongsWithRatings('all'),
+                    updateChartsWithRealData()
+                ]);
                 
                 document.getElementById('lastUpdate').textContent = 
                     `Last updated: ${new Date().toLocaleString('fa-IR')}`;
@@ -1552,7 +1549,7 @@ await Promise.all([
                 const playlistsHTML = Object.entries(playlistsByUser).map(([userId, userPlaylists]) => `
                     <div class="playlist-item">
                         <div class="playlist-header">
-                            <div class="playlist-user">User: ${userId.substring(0, 12)}...</div>
+                            <div class="playlist-user">${getUserDisplayName(userId)}</div>
                             <div class="playlist-count">${userPlaylists.length} tracks</div>
                         </div>
                         <div class="playlist-tracks">
