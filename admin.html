@@ -815,6 +815,8 @@
         let autoRefreshInterval = null;
         let charts = {};
         let cachedData = {};
+
+        let userProfiles = {}; // Add this line near the top with other global variables
         
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
@@ -1708,6 +1710,29 @@ async function loadDailyActivity() {
             });
         }
     }
+}
+        // Add these functions to your admin dashboard
+
+// Load user profiles for name display
+async function loadUserProfiles() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/stats/user-profiles`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        userProfiles = await response.json();
+        console.log(`👤 User profiles loaded: ${Object.keys(userProfiles).length} users`);
+    } catch (error) {
+        console.error('❌ Error loading user profiles:', error);
+        userProfiles = {}; // Use empty object as fallback
+    }
+}
+
+// Helper function to get display name from user ID
+function getUserDisplayName(userId) {
+    if (userProfiles[userId]) {
+        return userProfiles[userId].displayName;
+    }
+    return `User ${userId.substring(0, 8)}...`; // Fallback to shortened ID
 }
     </script>
 </body>
