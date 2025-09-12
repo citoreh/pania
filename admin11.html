@@ -829,14 +829,17 @@
             document.getElementById('lastUpdate').textContent = 'Updating...';
             
             try {
-                await Promise.all([
-                    loadOverviewStats(),
-                    loadTopSongs(),
-                    loadRecentActivity(),
-                    loadDetailedAnalytics(),
-                    loadSongsWithRatings('all'),
-                    updateChartsWithRealData()
-                ]);
+await Promise.all([
+    loadOverviewStats(),
+    loadTopSongs(),
+    loadTopLikedSongs(),        // MISSING
+    loadTopDislikedSongs(),     // MISSING
+    loadRecentActivity(),
+    loadDetailedAnalytics(),
+    loadSongsWithRatings('all'),
+    loadDailyActivity(),
+    updateChartsWithRealData()
+]);
                 
                 document.getElementById('lastUpdate').textContent = 
                     `Last updated: ${new Date().toLocaleString('fa-IR')}`;
