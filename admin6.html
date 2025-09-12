@@ -881,6 +881,119 @@
             }
         }
 
+        // Load songs with ratings and URLs
+        async function loadSongsWithRatings(filter = 'all') {
+            try {
+                // Update active button
+                document.querySelectorAll('.filter-controls .refresh-btn').forEach(btn => btn.classList.remove('active'));
+                if (filter === 'all') document.getElementById('btnAll').classList.add('active');
+                else if (filter === 'like') document.getElementById('btnLikes').classList.add('active');
+                else if (filter === 'dislike') document.getElementById('btnDislikes').classList.add('active');
+
+                const content = document.getElementById('songsWithRatings');
+                content.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Loading songs with ratings...</div>';
+
+                // Get ratings data
+                const ratingsResponse = await fetch(`${API_BASE_URL}/stats/all-ratings${filter !== 'all' ? `?type=${filter}` : ''}`);
+                if (!ratingsResponse.ok) throw new Error(`HTTP ${ratingsResponse.status}`);
+                const ratings = await ratingsResponse.json();
+
+                // Get playlist data to include URLs
+                const playlistsResponse = await fetch(`${API_BASE_URL}/stats/all-playlists`);
+                const playlists = playlistsResponse.ok ? await playlistsResponse.json() : [];
+
+                if (ratings.length === 0) {
+                    content.innerHTML = `<div class="loading">No ${filter === 'all' ? '' : filter + ' '}ratings found</div>`;
+                    return;
+                }
+
+                // Create URL lookup from playlists
+                const urlLookup = {};
+                playlists.forEach(item => {
+                    const key = item.id || item.title;
+                    if (!urlLookup[key] && item.url) {
+                        urlLookup[key] = item.url;
+                    }
+                });
+
+                // Group ratings by song and count
+                const songRatings = {};
+                ratings.forEach(rating => {
+                    const key = rating.id || rating.title;
+                    if (!songRatings[key]) {
+                        songRatings[key] = {
+                            id: rating.id,
+                            title: rating.title,
+                            poet: rating.poet,
+                            url: urlLookup[key] || null,
+                            likes: 0,
+                            dislikes: 0,
+                            lastRated: rating.timestamp,
+                            users: new Set()
+                        };
+                    }
+                    
+                    if (rating.rating === 'like') songRatings[key].likes++;
+                    if (rating.rating === 'dislike') songRatings[key].dislikes++;
+                    songRatings[key].users.add(rating.userId);
+                    
+                    if (rating.timestamp > songRatings[key].lastRated) {
+                        songRatings[key].lastRated = rating.timestamp;
+                    }
+                });
+
+                // Convert set to size for user count
+                Object.values(songRatings).forEach(song => {
+                    song.userCount = song.users.size;
+                    delete song.users;
+                });
+
+                // Sort by most recent ratings
+                const sortedSongs = Object.values(songRatings)
+                    .sort((a, b) => new Date(b.lastRated) - new Date(a.lastRated));
+
+                const songsHTML = sortedSongs.map(song => {
+                    const ratingClass = song.likes > song.dislikes ? 'liked' : song.dislikes > song.likes ? 'disliked' : '';
+                    const totalRatings = song.likes + song.dislikes;
+                    
+                    return `
+                        <div class="song-item ${ratingClass}">
+                            <div class="song-header">
+                                <div class="song-info">
+                                    <div class="song-title">ID: ${song.id || 'N/A'} - ${song.title}</div>
+                                    <div class="song-poet">By ${song.poet || 'Unknown'}</div>
+                                </div>
+                                <div class="song-actions">
+                                    ${song.url ? `<a href="${song.url}" target="_blank" class="song-url">🎵 Listen</a>` : '<span style="color: #999;">No URL</span>'}
+                                </div>
+                            </div>
+                            <div class="rating-info">
+                                <div class="rating-stat">
+                                    <span class="rating-badge like">👍 ${song.likes}</span>
+                                </div>
+                                <div class="rating-stat">
+                                    <span class="rating-badge dislike">👎 ${song.dislikes}</span>
+                                </div>
+                                <div class="rating-stat">
+                                    <span>👥 ${song.userCount} users</span>
+                                </div>
+                                <div class="rating-stat">
+                                    <span>📅 ${new Date(song.lastRated).toLocaleDateString('fa-IR')}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                content.innerHTML = songsHTML;
+                console.log(`🎯 Songs with ratings loaded: ${sortedSongs.length} (filter: ${filter})`);
+            } catch (error) {
+                console.error('Error loading songs with ratings:', error);
+                document.getElementById('songsWithRatings').innerHTML = 
+                    '<div class="error-message">Failed to load songs with ratings</div>';
+            }
+        }
+
         // Initialize charts with better styling
         function initializeCharts() {
             if (typeof Chart === 'undefined') {
