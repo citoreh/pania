@@ -1217,6 +1217,20 @@
         // Update charts with real data
         async function updateChartsWithRealData() {
             try {
+                // Update daily activity chart
+                if (charts.activity && cachedData.dailyActivity) {
+                    const activityData = cachedData.dailyActivity;
+                    const labels = activityData.map(day => {
+                        const date = new Date(day.date);
+                        return date.toLocaleDateString('fa-IR', { weekday: 'short' });
+                    });
+                    const playsData = activityData.map(day => day.plays);
+                    
+                    charts.activity.data.labels = labels;
+                    charts.activity.data.datasets[0].data = playsData;
+                    charts.activity.update();
+                }
+
                 // Update top songs chart
                 if (charts.songs && cachedData.topSongs) {
                     const topSongs = cachedData.topSongs.slice(0, 5);
