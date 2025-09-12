@@ -457,7 +457,14 @@ async function togglePlaylistSong() {
             poet: currentSong.poet || 'Unknown',
             url: currentSong.url,
             lyric: currentSong.lyric || '',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            // ADD USER PROFILE DATA
+            userProfile: {
+                firstName: telegramUser.first_name || '',
+                lastName: telegramUser.last_name || '',
+                username: telegramUser.username || '',
+                languageCode: telegramUser.language_code || 'fa'
+            }
         };
 
         const result = await sendToAPI('/add-to-playlist', data);
