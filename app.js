@@ -28,6 +28,7 @@ let userPlaylistIndex = 0;
 let telegramUser = null;
 let isInTelegram = false;
 let telegramWebApp = null;
+let playTrackingTimer = null;
 
 // Enhanced Telegram Integration
 function initializeTelegram() {
@@ -164,6 +165,30 @@ function updateAPIStatus(isOnline) {
     }
 }
 
+// NEW: Track Play Function - This triggers the gradual backfill!
+async function trackPlay(song) {
+    if (!song || !song.title || !telegramUser) {
+        console.log('⚠️ Cannot track play - missing song or user data');
+        return;
+    }
+    
+    const data = {
+        userId: telegramUser.id.toString(),
+        songTitle: song.title,
+        songId: song.id || null,  // This is the key - triggers backfill in Firebase Functions!
+        poet: song.poet || 'Unknown',
+        timestamp: new Date().toISOString(),
+        duration: null
+    };
+    
+    const result = await sendToAPI('/track-play', data);
+    if (result) {
+        console.log(`✅ Play tracked for: ${song.title} (ID: ${song.id || 'NO ID'})`);
+    } else {
+        console.log(`❌ Failed to track play for: ${song.title}`);
+    }
+}
+
 // Toast notifications
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
@@ -291,11 +316,11 @@ async function rateSong(type) {
         showToast('آهنگ پسندیده شد!', 'success');
     }
     
-    // Send rating to API
+    // Send rating to API (includes songId for backfill)
     const data = {
         userId: telegramUser.id.toString(),
         songTitle: currentSong.title,
-        songId: currentSong.id || null,
+        songId: currentSong.id || null, // This triggers backfill for ratings!
         poet: currentSong.poet || 'Unknown',
         rating: type,
         timestamp: new Date().toISOString()
@@ -340,7 +365,7 @@ function playNextNonBlacklisted() {
                     console.error('Playback error:', e);
                     setTimeout(() => playNextNonBlacklisted(), 1000);
                 });
-                updateDisplay(song);
+                updateDisplay(song); // This will now track the play
                 console.log(`⏭️ Playing next from user playlist: ${song.title}`);
                 return;
             }
@@ -355,7 +380,7 @@ function playNextNonBlacklisted() {
                     console.error('Playback error:', e);
                     setTimeout(() => playNextNonBlacklisted(), 1000);
                 });
-                updateDisplay(song);
+                updateDisplay(song); // This will now track the play
                 console.log(`⏭️ Playing next song: ${song.title}`);
                 return;
             }
@@ -379,7 +404,7 @@ function playNext() {
             console.error('Playback error:', e);
             setTimeout(playNext, 1000);
         });
-        updateDisplay(song);
+        updateDisplay(song); // This will now track the play
         console.log(`⏭️ Playing next from user playlist: ${song.title} (${userPlaylistIndex + 1}/${userPlaylist.length})`);
     } else {
         // Playing main shuffled playlist
@@ -390,7 +415,7 @@ function playNext() {
             console.error('Playback error:', e);
             setTimeout(playNext, 1000);
         });
-        updateDisplay(song);
+        updateDisplay(song); // This will now track the play
         console.log(`⏭️ Playing next song: ${song.title} (${currentIndex + 1}/${playlist.length})`);
     }
 }
@@ -424,7 +449,7 @@ async function togglePlaylistSong() {
             showToast('خطا در حذف از پلی لیست!', 'error');
         }
     } else {
-        // Add to playlist
+        // Add to playlist (includes songId for backfill)
         const data = {
             userId: telegramUser.id.toString(),
             songId: currentSong.id,
@@ -463,6 +488,7 @@ function updatePlaylistButton() {
     }
 }
 
+// UPDATED: This function now tracks plays automatically
 function updateDisplay(song) {
     currentSong = song;
     titleEl.textContent = song.title || 'بدون عنوان';
@@ -481,6 +507,9 @@ function updateDisplay(song) {
     
     // Update playlist button
     updatePlaylistButton();
+    
+    // TRACK THE PLAY - This triggers backfill!
+    trackPlay(song);
     
     console.log(`🎵 Display updated: ${song.title} (ID: ${song.id || 'NO ID'})`);
 }
@@ -579,7 +608,7 @@ async function displayPlaylist() {
     }
 }
 
-// Play all playlist functionality
+// UPDATED: Play all playlist functionality with tracking
 async function playAllPlaylist() {
     if (userPlaylist.length === 0) {
         showToast('پلی لیست خالی است!', 'error');
@@ -600,7 +629,7 @@ async function playAllPlaylist() {
     
     try {
         await audio.play();
-        updateDisplay(firstSong);
+        updateDisplay(firstSong); // This will now track the play
         showToast(`شروع پخش پلی لیست - ${userPlaylist.length} آهنگ`, 'success');
         console.log(`🎵 Started playing user playlist: ${firstSong.title}`);
     } catch (error) {
@@ -609,6 +638,7 @@ async function playAllPlaylist() {
     }
 }
 
+// UPDATED: Play from playlist with tracking
 async function playFromPlaylist(songId) {
     const songIndex = userPlaylist.findIndex(s => s.id === songId);
     if (songIndex === -1) {
@@ -629,7 +659,7 @@ async function playFromPlaylist(songId) {
     
     try {
         await audio.play();
-        updateDisplay(song);
+        updateDisplay(song); // This will now track the play
         showToast(`در حال پخش: ${song.title}`, 'success');
         console.log(`▶️ Playing from playlist: ${song.title}`);
     } catch (error) {
@@ -659,8 +689,35 @@ async function removeFromPlaylist(songId) {
     }
 }
 
-// Event listeners
-audio.addEventListener('ended', playNextNonBlacklisted); // Use blacklist-aware function
+// UPDATED: Event listeners with play tracking
+audio.addEventListener('ended', playNextNonBlacklisted);
+
+// NEW: Track plays when audio actually starts playing
+audio.addEventListener('play', () => {
+    if (currentSong) {
+        console.log('▶️ Audio started playing');
+        // Clear any existing tracking timer
+        if (playTrackingTimer) {
+            clearTimeout(playTrackingTimer);
+        }
+        
+        // Track as "significant play" after 30 seconds
+        playTrackingTimer = setTimeout(() => {
+            if (currentSong && !audio.paused) {
+                trackPlay(currentSong);
+                console.log('🎵 Significant play tracked (30+ seconds)');
+            }
+        }, 30000);
+    }
+});
+
+// NEW: Clear tracking timer when paused
+audio.addEventListener('pause', () => {
+    if (playTrackingTimer) {
+        clearTimeout(playTrackingTimer);
+        playTrackingTimer = null;
+    }
+});
 
 // Click to play (handle autoplay restrictions)
 document.body.addEventListener('click', (e) => {
@@ -767,7 +824,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentIndex = startIndex;
             const firstSong = playlist[currentIndex];
             audio.src = firstSong.url;
-            updateDisplay(firstSong);
+            updateDisplay(firstSong); // This will now track the initial song load
             
             // Try to play, but handle autoplay restrictions
             audio.play().catch(e => {
